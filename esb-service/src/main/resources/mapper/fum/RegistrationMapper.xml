@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.esb.medicaljournal.mapper.RegistrationMapper">
+    <sql id="selectRegisteredRecord">
+        r.hospital_name hospitalName,DEPT_ID,PATIENT_ID,org.org_name deptName,d.ch_name doctorName,
+        p.name patientName,p.id_card,p.health_card_no,p.esb_patient_id,
+        r.diagnoseroom,r.visit_time ,r.waittime,r.create_time,r.account_id,
+        r.visit_date ,o.id orderId,r.his_order_id,o.total_fee,
+        o.order_status ,r.reg_type ,r.app_id
+     </sql>
+
+    <select id="selectRegisteredRecordList" resultMap="registeredRecord">
+        SELECT * FROM
+        (SELECT A.*,
+        ROWNUM RN FROM (
+        SELECT DISTINCT
+        <include refid="selectRegisteredRecord"/>
+        FROM M_REGISTRATION R
+        JOIN M_PATIENT P
+        ON R.PATIENT_ID = P.ESB_PATIENT_ID
+        JOIN M_ORDER O
+        ON O.REG_ID = R.ID
+        JOIN M_DOCTOR D
+        ON R.DOCTOR_ID = D.DOCTOR_ID
+        JOIN M_ORG ORG
+        ON R.DEPT_ID = ORG.ORG_ID
+        WHERE (o.fee_type='诊查费'
+        OR o.fee_type='挂号费')
+        AND R.ACCOUNT_ID = #{accountId}
+        AND R.CREATE_TIME >add_months(sysdate,-3)
+        ORDER BY R.CREATE_TIME DESC)A
+        WHERE ROWNUM &lt;=#{end} ) WHERE RN >#{start}
+    </select>
+
+    <select id="selectLineUpList" resultMap="registeredRecord">
+        select DISTINCT
+        <include refid="selectRegisteredRecord"/>
+        FROM M_REGISTRATION R
+        JOIN M_PATIENT P
+        ON R.PATIENT_ID = P.ESB_PATIENT_ID
+        JOIN M_ORDER O
+        ON O.REG_ID = R.ID
+        JOIN M_DOCTOR D
+        ON R.DOCTOR_ID = D.DOCTOR_ID
+        JOIN M_ORG ORG
+        ON R.DEPT_ID = ORG.ORG_ID
+        WHERE  r.PATIENT_ID=#{patientId}
+        AND (o.fee_type='诊查费'
+        OR o.fee_type='挂号费')
+        AND o.ORDER_STATUS = '1'
+        AND ceil(r.VISIT_DATE-sysdate)= '0'
+    </select>
+
+    <select id="selectRegisteredRecordByOrderId" resultMap="registeredRecord">
+        select
+        <include refid="selectRegisteredRecord"/>
+            FROM M_REGISTRATION R
+            JOIN M_PATIENT P
+            ON R.PATIENT_ID = P.ESB_PATIENT_ID
+            JOIN M_ORDER O
+            ON O.REG_ID = R.ID
+            JOIN M_DOCTOR D
+            ON R.DOCTOR_ID = D.DOCTOR_ID
+            JOIN M_ORG ORG
+            ON R.DEPT_ID = ORG.ORG_ID
+            WHERE ROWNUM =1
+            AND O.ID=#{orderId}
+        </select>
+    <resultMap id="registeredRecord" type="com.ry.fu.esb.medicaljournal.model.RegisteredRecord">
+
+       <!-- <result property="hospitalName" column="hospitalName" jdbcType="VARCHAR"/>
+        <result property="deptName" column="deptName" jdbcType="VARCHAR"/>
+        <result property="doctorName" column="doctorName" jdbcType="VARCHAR"/>
+        <result property="patientName" column="patientName" jdbcType="VARCHAR"/>
+        <result property="accountId" column="account_id" jdbcType="NUMERIC"/>
+        <result property="esbPatientId" column="esb_patient_id" jdbcType="NUMERIC"/>
+        <result property="idCard" column="id_card" jdbcType="VARCHAR"/>
+        <result property="healthCardNo" column="health_card_no" jdbcType="VARCHAR"/>
+        <result property="visitDate" column="visit_date" />
+        <result property="waitTime" column="waittime" />
+        <result property="createTime" column="create_time" />
+        <result property="visitTime" column="visit_time" jdbcType="VARCHAR"/>
+        <result property="totalFee" column="total_fee" jdbcType="NUMERIC"/>
+        <result property="orderId" column="orderId" jdbcType="VARCHAR"/>
+
+        <result property="hisOrderId" column="his_order_id" jdbcType="VARCHAR"/>
+        <result property="diagnoseRoom" column="diagnoseroom" jdbcType="VARCHAR"/>
+        <result property="orderStatus" column="orderStatus" jdbcType="VARCHAR"/>
+        <result property="regType" column="regType" jdbcType="VARCHAR"/>
+        <result property="appId" column="appId" jdbcType="VARCHAR"/>-->
+    </resultMap>
+
+    <select id="selectFollowUpRegistration" resultType="java.util.HashMap">
+             SELECT mr.*, mp.NAME "name"
+            FROM
+              (SELECT PATIENT_ID "patientId",
+                    VISIT_DATE "visitDate",
+                    VISIT_TIME "visitTime",
+                    PROJECT_NAME "projectName"
+               FROM m_registration
+               WHERE DOCTOR_ID =#{accountId}
+               AND PROJECT_ID    is not NULL
+              )mr
+            left JOIN M_PATIENT mp
+            ON mr."patientId" = mp.ESB_PATIENT_ID
+
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.SurveyAnswersMapper">
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into fu_survey_answers(detailId,flow_program_instance_Id,answertext)
+        SELECT  A.*
+        FROM(
+        <foreach collection="answers" item="item" index= "index" separator ="UNION ALL">
+            select #{item.choiceId} as choiceId,#{item.flowProgramInstanceId} as flowProgramInstanceId,#{item.answerText} as answerText
+            FROM dual
+        </foreach>
+        )A
+    </insert>
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ry.fu.esb.doctorbook.mapper.HandInformMapper">
+    <resultMap id="handInformResult" type="com.ry.fu.esb.doctorbook.model.HandInform">
+        <id property="id" column="id" />
+        <!--<result property="pushTitleType" column="push_title_type"/>
+      <result property="sickBedNo" column="sick_Bed_No"/>
+      <result property="doctorName" column="doctor_Name"/>
+      <result property="patientId" column="patient_id"/>
+      <result property="patientName" column="patient_name"/>
+      <result property="age" column="age"/>
+      <result property="postoperativeDay" column="postoperative_Day"/>
+      <result property="strDiagnosis" column="strDiagnosis"/>
+      <result property="createDate" column="create_date"/>-->
+
+        <result property="pushTitleType" column="SHIFT_FLAG"/>
+        <result property="doctorName" column="SHIFT_DOCTOR_NAME"/>
+        <result property="subShiftDoctorName" column="SUB_SHIFT_DOCTOR_NAME"/>
+        <result property="patientId" column="patient_id"/>
+        <result property="patientName" column="name"/>
+        <result property="sickBedNo" column="BED_NO"/>
+        <result property="age" column="age"/>
+        <result property="postoperativeDay" column="IN_HOSPITAL_DAYS"/>
+        <result property="strDiagnosis" column="DIAGNOSIS"/>
+        <result property="createDate" column="SHIFT_TIME"/>
+        <result property="outCreateDate" column="SHIFT_TIME" />
+    </resultMap>
+    <select id="selectHandInformInfo" parameterType="String" resultMap="handInformResult">
+
+
+      SELECT ROW_NUMBER() OVER(ORDER BY SHIFT_TIME desc) ROW_NUM, TEMP.*
+      FROM (
+               (
+                select C.ID as ID ,C.SHIFT_FLAG as SHIFT_FLAG,C.SHIFT_DOCTOR_NAME as SHIFT_DOCTOR_NAME,C.PATIENT_ID as PATIENT_ID,C.SHIFT_TIME as SHIFT_TIME,
+                C.SUB_SHIFT_DOCTOR_NAME as SUB_SHIFT_DOCTOR_NAME,H.NAME as NAME,H.BED_NO as BED_NO,H.AGE as AGE,
+                H.IN_HOSPITAL_DAYS as IN_HOSPITAL_DAYS,H.DIAGNOSIS as DIAGNOSIS
+                from M_CS_DATA C,M_HOSPITAL_PATIENT H
+                where (C.TAKE_DOCTOR=#{doctorId} or C.SUP_TAKE_DOCTOR_ID=#{doctorId}) and C.SHIFT_FLAG=1 and C.PATIENT_ID=H.PATIENT_ID
+               )
+              UNION
+              (
+               select C1.ID as ID ,C1.SHIFT_FLAG as SHIFT_FLAG,C1.SHIFT_DOCTOR_NAME as SHIFT_DOCTOR_NAME,C1.PATIENT_ID as PATIENT_ID,C1.SHIFT_TIME as SHIFT_TIME,
+               C1.SUB_SHIFT_DOCTOR_NAME as SUB_SHIFT_DOCTOR_NAME,null as NAME,null as BED_NO,null as AGE,null as IN_HOSPITAL_DAYS,null as DIAGNOSIS
+               from M_CS_DATA C1
+               where (C1.TAKE_DOCTOR=#{doctorId} or C1.SUP_TAKE_DOCTOR_ID=#{doctorId}) and C1.SHIFT_FLAG=2
+               )
+        )temp
+    </select>
+
+   <!-- <select id="selectHandInformInfo" parameterType="Map" resultMap="handInformResult">
+        select i2.* from (
+            select i1.*,rownum rn from (
+                select i.id,i.push_title_type,i.sick_Bed_No,i.sex,i.patient_Id,i.patient_Name,i.doctor_Name,i.age,i.postoperative_Day,i.strDiagnosis,i.create_date
+                from m_hand_Inform i join m_ap_doctor d on i.id=d.hand_inform_id where d.doctor_id=#{map.doctorId} order by i.create_date desc)
+            i1 where rownum &lt;= #{map.pageSize})
+        i2 where rn &gt;=#{map.pageNum}
+    </select>-->
+
+    <select id="selectAppointDoctorCount" parameterType="string" resultType="_int">
+        select count(i.id)
+        from m_hand_Inform i join m_ap_doctor d
+        on i.id=d.hand_inform_id
+        where d.doctor_id=#{doctorId}
+    </select>
+</mapper>

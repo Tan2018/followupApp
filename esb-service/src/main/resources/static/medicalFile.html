@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>支付页面</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- 引入 Bootstrap
+	<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	 -->
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css">
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap-theme.css">
+	<script src="bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+	<script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+	<script src="bootstrap-3.3.7-dist/js/jquery.form.js"></script>
+
+	<script>
+		$(function() {
+			//发起预支付申请
+			$("#preBtn").on('click', function() {
+                var form = $("#fileForm");
+                var options = {
+                    type:'post',
+                    success : function(data) {
+                        console.log(data);
+                    }
+                };
+                form.ajaxSubmit(options);
+			});
+		});
+	</script>
+
+</head>
+<body>
+	<div class="container">
+		<form id="fileForm" method="post" action="http://localhost:2017/esb/followupApp/v1/medicalPatron/medicalFile/upload" enctype="multipart/form-data">
+			<div class="form-group">
+				<label for="doctorCode">doctorCode</label>
+				<input type="text" class="form-control" id="doctorCode" name="doctorCode" value="83834" placeholder="">
+			</div>
+			<div class="form-group">
+				<label for="patientId">patientId</label>
+				<input type="text" class="form-control" id="patientId" name="patientId" value="1006897293" placeholder="">
+			</div>
+			<div class="form-group">
+				<label for="file">file</label>
+				<input type="file" class="form-control" id="file" name="file">
+			</div>
+			<button type="button" id="preBtn" class="btn btn-default">提交</button>
+		</form>
+
+	</div>
+	
+		
+</body>
+
+<html>

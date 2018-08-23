@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.esb.doctorbook.mapper.DoctorLoginMapper">
+
+    <resultMap id="DoctorLoginResult" type="com.ry.fu.esb.doctorbook.model.DoctorLoginInfo">
+
+
+
+        <!--doctorName  doctorCode
+        doctorId  sex mobile telePhone  processName firstLoginTime
+        lastLoginTime neteaseToken  appId -->
+
+ </resultMap>
+      <!--
+    <insert id="saveOrUpdate" >
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            SELECT COUNT(*) FROM M_DOCTOR_LOGIN WHERE DOCTOR_CODE = #{doctorCode}
+        </selectKey>
+        <if test="count > 0">
+            UPDATE M_DOCTOR_LOGIN
+            SET DOCTOR_NAME = #{doctorName},DOCTOR_ID = #{doctorId},SEX = #{sex},MOBILE = #{mobile},
+            TELEPHONE = #{telePhone},PROFESS_NAME = #{processName},FIRST_LOGIN_TIME = #{firstLoginTime},LAST_LOGIN_TIME = #{lastLoginTime},NETEASE_TOKEN = #{neteaseToken},APP_ID = #{appId}
+            WHERE DOCTOR_CODE = #{doctorCode}
+        </if>
+        <if test="count==0">
+            INSERT INTO M_DOCTOR_LOGIN VALUES(#{id},#{orgId},#{sex},#{processName},#{chName},#{userName},
+            #{status},#{goodAt},#{headImg},#{orgName},#{doctorId})
+        </if>
+    </insert>
+
+    <insert id="saveNoRepeat" >
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            SELECT COUNT(*) FROM M_DOCTOR_LOGIN WHERE DOCTOR_CODE = #{doctorCode}
+        </selectKey>
+        <if test="count==0">
+            INSERT INTO M_DOCTOR_LOGIN VALUES(#{id},#{orgId},#{sex},#{processName},#{chName},#{userName},
+            #{status},#{goodAt},#{headImg},#{orgName},#{doctorId})
+        </if>
+    </insert>
+
+    <select id="selectAppointDoctorInfo" resultMap="DoctorResult">
+        select doctor_id,ch_name from m_doctor where doctor_id in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+               #{item}
+        </foreach>
+    </select>-->
+
+</mapper>

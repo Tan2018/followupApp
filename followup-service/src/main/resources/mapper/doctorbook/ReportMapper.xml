@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.ReportMapper">
+
+    <resultMap id="ProgramAndFlowStatus" type="com.ry.fu.followup.doctorbook.model.Report">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="templateVerId" column="template_ver_id" jdbcType="NUMERIC"/>
+        <result property="reportStatus" column="reportStatus" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="createUser" column="create_user" jdbcType="NUMERIC"/>
+        <result property="lastupdateUser" column="lastupdate_user" jdbcType="NUMERIC"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="lastupdateTime" column="lastupdate_time" jdbcType="TIMESTAMP"/>
+        <result property="synVersion" column="syn_version" jdbcType="NUMERIC"/>
+       
+    </resultMap>
+
+  
+
+</mapper>

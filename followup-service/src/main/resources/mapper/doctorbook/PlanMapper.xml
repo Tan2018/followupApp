@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.PlanMapper">
+
+    <select id="queryPlanListByGroupId" resultType="java.util.HashMap">
+        select plan_name as "planName",id as "planId" from fu_plan where bus_type =1 and bus_id=#{groupId}
+    </select>
+</mapper>

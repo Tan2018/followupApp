@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.SymptomMapper">
+
+    <sql id="all">
+        p.id,p.part_code,p.part_name,p.part_picture,s.id sId,s.name sName,d.org_id,part_picture_selected
+    </sql>
+
+    <select id="findSymptom" resultMap="part">
+        select
+        <include refid="all"/>
+        from m_part p
+        left outer join m_symptom s
+        on p.id = s.part_id
+        left outer join m_guide_diagnosis d
+        on s.id = d.symptom_id
+        where s.sex =#{arg0}
+        order by p.part_order
+    </select>
+
+
+    <select id="getPartPic" parameterType="java.lang.String" resultType="com.ry.fu.esb.medicaljournal.model.PartPic">
+        select bytearray from pwp_upload_bytearray where uploadid = #{arg0}
+    </select>
+
+
+
+    <resultMap id="part" type="com.ry.fu.esb.medicaljournal.model.Part">
+
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="code" column="part_code" jdbcType="VARCHAR"/>
+        <result property="name" column="part_name" jdbcType="VARCHAR"/>
+        <result property="unSelectedUrl" column="part_picture" jdbcType="VARCHAR"/>
+        <result property="selectedUrl" column="part_picture_selected" jdbcType="VARCHAR"/>
+
+    <collection property="symptomsList"  javaType="list" ofType="com.ry.fu.esb.medicaljournal.model.Symptoms">
+        <id column="sId" property="id" jdbcType="NUMERIC"/>
+        <result column="sName" property="name" jdbcType="VARCHAR"/>
+           <association property="depts" javaType="com.ry.fu.esb.medicaljournal.model.Department">
+            <id column="id" property="id"/>
+            <result column="org_id" property="deptId" jdbcType="VARCHAR"/>
+          </association>
+    </collection>
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.FufileMapper">
+   <resultMap id="fufilePaths" type="com.ry.fu.followup.doctorbook.model.Survey">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="fileName" column="su_ver_id" jdbcType="VARCHAR"/>
+        <result property="filePath" column="title" jdbcType="VARCHAR"/>
+        <result property="fileType" column="description" jdbcType="VARCHAR"/>
+        <result property="createUser" column="description" jdbcType="NUMERIC"/>
+        <result property="createTime" column="description" jdbcType="TIMESTAMP"/>
+        <result property="uploadType" column="description" jdbcType="VARCHAR"/>
+        <result property="updateTime" column="description" jdbcType="TIMESTAMP"/>
+        <result property="updateUser" column="description" jdbcType="NUMERIC"/>
+        <result property="groupId" column="description" jdbcType="NUMERIC"/>
+        <result property="fieldName" column="description" jdbcType="VARCHAR"/>
+
+    </resultMap>
+
+
+</mapper>

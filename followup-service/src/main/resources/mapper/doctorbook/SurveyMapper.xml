@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.SurveyMapper">
+    <!--<resultMap id="SurveyMap" type="com.ry.fu.followup.doctorbook.model.Survey">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="suVerId" column="su_ver_id" jdbcType="NUMERIC"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <association property="surveyQuestions" javaType="com.ry.fu.followup.doctorbook.model.SurveyQuestion">
+            <id property="id" column="id" jdbcType="NUMERIC"/>
+            <result property="question" column="question" jdbcType="VARCHAR"/>
+            <result property="questionType" column="question_type" jdbcType="CHAR"/>
+            <result property="isAnseer" column="is_anseer" jdbcType="CHAR"/>
+            <result property="surveyId" column="surveyid" jdbcType="NUMERIC"/>
+            <result property="suVerId" column="su_Ver_Id" jdbcType="NUMERIC"/>
+        </association>
+    </resultMap>-->
+
+    <!--<resultMap type="com.ea.bic.model.vo.Area" id="SurveyDetailMap">
+        <id column="id" property="code"/>
+        <result column="areaname" property="name"/>
+    </resultMap>
+
+    <resultMap type="com.ea.bic.model.vo.City" id="cityMap">
+        <id column="cid" property="code"/>
+        <result column="citname" property="name"/>
+        <collection property="district" ofType="com.ea.bic.model.vo.Area" resultMap="AreaMap" />
+    </resultMap>
+
+    <resultMap type="com.ea.bic.model.vo.Province"  id="SurveyMap">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="suVerId" column="su_ver_id" jdbcType="NUMERIC"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <collection property="surveyQuestions" ofType="com.ry.fu.followup.doctorbook.model.SurveyQuestion"
+                    select="getSurveyQuestions" column="{surveyid=id,suVerId=su_ver_id}">
+        </collection>
+    </resultMap>-->
+
+   <resultMap id="SurveyMap" type="com.ry.fu.followup.doctorbook.model.Survey">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="suVerId" column="su_ver_id" jdbcType="NUMERIC"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <collection  property="surveyQuestions" ofType="com.ry.fu.followup.doctorbook.model.SurveyQuestion"
+                    >
+            <id property="id" column="question_id" jdbcType="NUMERIC"/>
+            <result property="question" column="question_name" jdbcType="VARCHAR"/>
+            <result property="questionType" column="question_type" jdbcType="CHAR"/>
+            <result property="sort" column="sort" jdbcType="NUMERIC"/>
+            <collection  property="surveyDetails" resultMap ="detailMap">
+            </collection >
+        </collection >
+    </resultMap>
+
+    <resultMap id="detailMap" type="java.util.HashMap">
+        <id property="choiceId" column="choiceId" jdbcType="NUMERIC"/>
+        <id property="choiceText" column="choicetext" jdbcType="NUMERIC"/>
+        <id property="isAnswer" column="isAnswer" jdbcType="NUMERIC"/>
+        <id property="answerText" column="answerstext" jdbcType="CHAR"/>
+    </resultMap>
+
+    <select id="querySurvey" resultMap="SurveyMap">
+        select sn.id           as id,
+        sn.su_ver_id    as su_ver_id,
+        sn.title        as title,
+        sn.description  as description,
+        sq.id           as question_id,
+        sq.sort         as sort,
+        sq.question     as question_name,
+        sq.questiontype as question_type,
+        sd.id           as choiceId,
+        sd.choicetext   as choicetext,
+        (case when sa.detailid is not null then 1 else 0 end )   as isAnswer,
+        sa.answerText as answerstext
+        from fu_survey_name sn, fu_survey_question sq, fu_survey_detail sd left join fu_survey_answers sa
+
+        on  sa.detailid = sd.id
+        where  sn.id = sq.surveyid
+        and sn.su_ver_id = sq.su_ver_id
+        and sd.questionid = sq.id
+        and sn.su_ver_id =
+        (select max(su_ver_id)
+        from fu_survey_name
+        where id = (select fp.surveyid
+        from fu_follow_program_instance ffp, fu_program fp
+
+        where ffp.id = #{flowProgramInstanceId}
+        and ffp.program_id = fp.id))
+        order by sq.sort
+    </select>
+
+    <select id="getSurveyQuestions" parameterType="java.util.Map" resultType="com.ry.fu.followup.doctorbook.model.SurveyQuestion">
+        select * from fu_survey_question where  surveyid =#{surveyid} and su_ver_id=#{suVerId}
+    </select>
+
+    <select id="getSurveyDetails" parameterType="long" resultType="com.ry.fu.followup.doctorbook.model.SurveyDetail">
+        select * from fu_survey_detail where  questionId =#{questionId}
+    </select>
+
+
+    <!--根据病人id和项目id获取问卷调查列表 -->
+    <select id="querySurveylist" resultType="java.util.HashMap">
+        SELECT fr.patient_id,
+                ffi.start_follow_time as "date",
+                ffgi.id AS flowProgramInstanceId,
+                fp.name AS programName
+        FROM fu_questionnaire fq,
+                fu_group_record fgr ,
+                fu_record fr ,
+                fu_flow_instance ffi ,
+                fu_follow_program_instance ffgi,
+                fu_program fp
+        WHERE fgr.id      = fq.group_record_id
+        AND fgr.record_id = fr.id
+        AND ffi.ques_id   = fq.id
+        AND ffgi.flow_id  = ffi.id
+        AND fp.id         = ffgi.program_id
+        AND fp.type       =1
+        AND fgr.group_id  = #{groupId}
+        AND fr.patient_id =#{patientId}
+
+    </select>
+
+</mapper>

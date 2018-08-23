@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.doctorbook.mapper.ShiftWorkInfoMapper">
+    <sql id="findShiftInfo">
+        C.ID,C.SHIFT_DOCTOR,C.SHIFT_DOCTOR_NAME,C.SUB_SHIFT_DOCTOR_ID,C.SUB_SHIFT_DOCTOR_NAME,C.SHIFT_TIME,
+        C.ST_STATE as takeStatus,C.SUP_TAKE_DOCTOR_ID,C.SUP_TAKE_DOCTOR_NAME,C.TAKE_DOCTOR,C.TAKE_DOCTOR_NAME,
+        C.SHIFT_AGAIN,C.TAKE_TIME ,H.PATIENT_ID ,H.NAME as patientName ,H.SEX AS sexFlag,H.BED_NO as sickBedNo,
+        H.AGE,H.IN_HOSPITAL_DAYS as inpatientDayStatus ,H.DIAGNOSIS as strDiagnosis,H.RESPONSIBLE_DOCTOR
+    </sql>
+
+    <select id="findOtherDeptShiftInfoList" resultMap="shiftInfoVO">
+        select
+        <include refid="findShiftInfo"/>
+        FROM M_CS_DATA C
+        JOIN M_HOSPITAL_PATIENT H
+        ON C.PATIENT_ID=H.PATIENT_ID
+        WHERE
+        (( C.SHIFT_DOCTOR = #{doctorId} and C.TAKE_DEPT_ID != #{deptId})
+        OR
+        ((C.TAKE_DOCTOR = #{doctorId} or C.SUP_TAKE_DOCTOR_ID =#{doctorId} ) and
+        C.ST_STATE = '1' and C.SHIFT_DEPT_ID != #{deptId}))
+        AND C.SHIFT_FLAG=1
+        AND C.SHIFT_TIME > (sysdate-3)
+        ORDER BY C.SHIFT_TIME DESC
+    </select>
+
+    <select id="findOtherDeptTakeInfoList" resultMap="shiftInfoVO">
+        select
+        <include refid="findShiftInfo"/>
+        from m_cs_data c
+        join M_HOSPITAL_PATIENT H
+        on C.PATIENT_ID=H.PATIENT_ID
+        where c.shift_time > (sysdate-3)
+        and c.shift_flag=1
+        and (c.take_doctor = #{doctorId} or c.sup_take_doctor_id = #{doctorId})
+        and c.SHIFT_DEPT_ID != #{deptId}
+        order by C.SHIFT_TIME desc
+    </select>
+
+    <select id="findThisDeptTakeInfoList" resultMap="shiftInfoVO">
+        select
+        <include refid="findShiftInfo"/>
+        from m_cs_data c
+        join M_HOSPITAL_PATIENT H
+        on C.PATIENT_ID=H.PATIENT_ID
+        where c.shift_time > (sysdate-1)
+        and c.shift_flag=1
+        and (c.take_doctor = #{doctorId} or c.sup_take_doctor_id = #{doctorId})
+        and c.SHIFT_DEPT_ID = #{deptId}
+        order by C.SHIFT_TIME desc
+    </select>
+
+    <select id="findThisGroupTakeInfoList" resultMap="shiftInfoVO">
+        select
+        <include refid="findShiftInfo"/>
+        from m_cs_data c
+        join M_HOSPITAL_PATIENT H
+        on C.PATIENT_ID=H.PATIENT_ID
+        where c.shift_time > (sysdate-1)
+        and c.shift_flag=1
+        and (c.take_doctor = #{doctorId} or c.sup_take_doctor_id = #{doctorId})
+        and c.SHIFT_GROUP_ID = #{groupId}
+        order by C.SHIFT_TIME desc
+    </select>
+
+    <select id="findMyTakeInfoList" parameterType="java.util.Map" resultMap="shiftInfoVO">
+        select
+        <include refid="findShiftInfo"/>
+        from m_cs_data c
+        join M_HOSPITAL_PATIENT H
+        on C.PATIENT_ID=H.PATIENT_ID
+        where c.shift_time > (sysdate-1)
+        and c.shift_flag=1
+        and (c.take_doctor = #{doctorId} or c.sup_take_doctor_id = #{doctorId})
+        and c.PATIENT_ID
+        IN
+        <foreach collection="list" item="patientId" index="index"
+                 open="(" close=")" separator=",">
+            #{patientId}
+        </foreach>
+        order by SHIFT_TIME desc
+    </select>
+
+
+
+
+    <resultMap id="shiftInfoVO" type="com.ry.fu.esb.doctorbook.model.ShiftInfoVO">
+    </resultMap>
+
+</mapper>

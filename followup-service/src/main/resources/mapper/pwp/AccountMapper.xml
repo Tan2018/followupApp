@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.followup.pwp.mapper.AccountMapper">
+
+    <resultMap id="accMap" type="com.ry.fu.followup.pwp.model.Account">
+        <id property="accountId" column="account_id" jdbcType="NUMERIC"/>
+        <result property="accountName" column="account_name" jdbcType="VARCHAR"/>
+        <result property="accountInvDate" column="account_inv_date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="accColumns">
+        account_id as "accountId",
+        account_name as "accountName",
+        to_char(account_inv_date, 'yyyy-MM-dd HH24:mi:ss') as "accountInvDate"
+    </sql>
+
+    <select id="selectAccount" resultMap="accMap" parameterType="java.lang.Long">
+      select
+        account_id, account_name, account_inv_date
+      from pwp_account where account_id = #{accountId}
+    </select>
+
+    <select id="selectAccount1" resultType="java.util.Map" parameterType="java.lang.Long">
+        select
+            <include refid="accColumns"/>
+        from pwp_account where account_id = #{accountId}
+    </select>
+
+</mapper>

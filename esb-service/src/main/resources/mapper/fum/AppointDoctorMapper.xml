@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.doctorbook.mapper.AppointDoctorMapper">
+    <resultMap id="resultApDoctor" type="com.ry.fu.esb.doctorbook.model.AppointDoctor">
+        <id column="id" property="id"></id>
+        <association property="ptRecord" column="id" javaType="com.ry.fu.esb.doctorbook.model.PtRecord">
+            <id property="aid" column="id"/>
+            <result property="patientId" column="patient_id"/>
+        </association>
+    </resultMap>
+    <select id="selectAppointeeDoctorInfo" resultMap="resultApDoctor" parameterType="string">
+            select distinct(r.patient_id)
+            from m_pt_record r join m_ap_doctor d
+            on r.id=d.pc_id
+            where floor(to_date(to_char(sysdate,'yyyy-MM-dd hh24:mi:ss'),'yyyy-MM-dd hh24:mi:ss')-to_date(to_char(r.create_time,'yyyy-MM-dd hh24:mi:ss'),'yyyy-MM-dd hh24:mi:ss'))=0
+            and type=1
+            and d.doctor_id=2
+            and nvl(hand_inform_id,'0')!='0'
+    </select>
+    <!--<select id= "getCSFileByCSId" parameterType="Long" resultMap="CSFileMap">-->
+        <!--select id,file_path,flag,upload_time from M_CS_FILE where cs_id = #{csId}-->
+    <!--</select>-->
+    <insert id="insertBatch" parameterType="list">
+        insert into m_ap_doctor(id,pc_id,doctor_id,hand_inform_id)
+        <foreach collection="appointDoctors" item="item" separator="union" open="select id,patientRecordId,doctorId,handInformId from ( " close=")">
+            select #{item.id} id,#{item.patientRecordId} patientRecordId,#{item.doctorId} doctorId,#{item.handInformId} handInformId from dual
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.PatientMapper">
+
+    <resultMap id="groupMap" type="com.ry.fu.followup.doctorbook.model.Patient">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="height" column="height" jdbcType="NUMERIC"/>
+        <result property="bloodType" column="bloodType" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="INTEGER"/>
+        <result property="weight" column="weight" jdbcType="NUMERIC"/>
+        <result property="marriage" column="marriage" jdbcType="INTEGER"/>
+        <result property="age" column="age" jdbcType="NUMERIC"/>
+        <result property="status" column="status" jdbcType="VARCHAR"/>
+        <result property="birthday" column="birthday" jdbcType="TIMESTAMP"/>
+
+
+    </resultMap>
+
+    <resultMap id="remindMap" type="com.ry.fu.followup.doctorbook.model.Remind">
+        <result property="id" column="patient_id" jdbcType="NUMERIC"></result>
+        <result property="name" column="patient_name" jdbcType="VARCHAR"></result>
+        <result property="project" column="group_name" jdbcType="VARCHAR"></result>
+        <result property="phones" column="phone" jdbcType="VARCHAR"></result>
+        <result property="followTime" column="start_follow_time" jdbcType="DATE"></result>
+        <result property="projectId" column="group_id" jdbcType="NUMERIC"></result>
+        <result property="connected" column="connected" jdbcType="INTEGER"></result>
+    </resultMap>
+
+    <select id="queryPatientsByGroupIdByPage" resultType="com.ry.fu.followup.doctorbook.model.Patient">
+        SELECT * FROM
+        ( SELECT fp1.*, ROWNUM RN FROM
+         ( select (select min(ffi.start_follow_time) from Fu_Questionnaire fq, fu_flow_instance ffi
+          where ffi.start_follow_time>sysdate and ffi.ques_id = fq.id
+            and fq.group_record_id = fgr.id) as "next_followup_time",
+         (select min(ffi.start_follow_time) from Fu_Questionnaire fq, fu_flow_instance ffi
+          where ffi.ques_id = fq.id and fq.group_record_id = fgr.id) as "max_followup_time",
+        fp.id as id, fp.name as name,  fp.hospital_no  as hospitalNo,fp.height as height,
+        fp.blood_type as bloodType, fp.phone as phone, fp.email as email, fp.sex as sex,
+        fp.weight as weight, fp.marriage as marriage, fp.age as age,
+        fp.birthday as birthday, fp.CDR_PATIENT_ID As cdrPatientId,fgr.id as groupRecordId
+        from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_RECORD fr, FU_PATIENT fp
+        where fg.id=fgr.group_id
+        and fgr.record_id=fr.id
+        and fr.patient_id=fp.id
+        and fgr.status = '1'
+        and fg.id=#{groupId}) fp1
+        WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <select id="queryPatientsByGroupIdAndNameByPage" resultType="com.ry.fu.followup.doctorbook.model.Patient">
+        SELECT * FROM
+        ( SELECT fp1.*, ROWNUM RN FROM
+        ( select (select min(ffi.start_follow_time) from Fu_Questionnaire fq,fu_flow_instance ffi where ffi.start_follow_time>trunc(sysdate+1) and ffi.ques_id =fq.id and fq.group_record_id = fgr.id) as  "next_followup_time",
+        fp.id as id, fp.name as name, fp.height as height, fp.blood_type as bloodType, fp.phone as phone, fp.email as email, fp.sex as sex, fp.weight as weight, fp.marriage as marriage, fp.age as age,
+        fp.hospital_no AS hospitalNo, fp.CDR_PATIENT_ID As cdrPatientId,fgr.id as groupRecordId
+        from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_RECORD fr, FU_PATIENT fp
+        where fg.id=fgr.group_id
+        and fgr.record_id=fr.id
+        and fr.patient_id=fp.id
+        and fgr.status = '1'
+        and fp.name like concat(concat('%',#{patientName}),'%')
+        and fg.id=#{groupId}) fp1
+        WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <select id="getPatientsCountByGroupId" resultType="java.lang.Integer" parameterType="java.lang.Long">
+        select count(*) as total from
+            (
+                select fp.id
+                from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_RECORD fr, FU_PATIENT fp
+                where fg.id=fgr.group_id
+                and fgr.record_id=fr.id
+                and fr.patient_id=fp.id
+                and fgr.status = '1'
+                and fg.id=#{groupId}
+                <if test="patientName != null">
+                    and fp.name like concat(concat('%',#{patientName}),'%')
+                </if>
+            )
+    </select>
+
+    <select id="queryRemindsByDoctorId" resultMap="remindMap" parameterType="java.lang.Long">
+
+    select *
+    from (
+    SELECT fp.id AS patient_id,
+    fp.name    AS patient_name,
+    fp.phone,
+    fli.start_follow_time,
+    fli.status,
+    fg.id        AS group_id,
+    fg.name      AS group_name,
+    fq.connected AS connected,
+    row_number() OVER(PARTITION BY patient_id ORDER BY start_follow_time) as rowflg
+    FROM fu_flow_instance fli,
+    fu_group fg,
+    fu_questionnaire fq ,
+    (SELECT *
+    FROM fu_group_record
+    WHERE group_id IN
+    (SELECT group_id FROM fu_group_member WHERE user_id=#{doctorId}
+    )
+    ) fgr ,
+    fu_record fr,
+    fu_patient fp
+    WHERE fli.ques_id      = fq.id
+    AND fq.group_record_id = fgr.id
+    AND fgr.record_id      =fr.id
+    AND fr.patient_id      =fp.id
+    AND fgr.group_id       = fg.id
+    AND fli.status !=2
+
+    ORDER BY fp.id,
+    fli.start_follow_time
+    ) temp where temp.rowflg='1'
+
+    </select>
+<!--根据patienid查询病人是否入组,status为1代表入组,0未入组-->
+    <select id="queryPatientStatus" resultType="com.ry.fu.followup.doctorbook.model.Patient">
+
+      select fp2.*,
+   (SELECT
+      max(fgr.STATUS)        AS status
+    FROM FU_GROUP fg,
+      FU_GROUP_RECORD fgr,
+      FU_RECORD fr,
+      FU_PATIENT fp
+    WHERE fg.id      =fgr.group_id
+    AND fgr.record_id=fr.id
+    AND fr.patient_id=fp.id
+    AND fp.id        =fp2.id) as status from  FU_PATIENT fp2  where fp2.id IN
+
+        (select id from fu_patient  where   CDR_PATIENT_ID In
+
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+        )
+
+
+    </select>
+
+</mapper>

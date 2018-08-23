@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.GroupRecordMapper">
+
+    <select id="selectDoctors" resultType="java.util.Map">
+        select fgr.TRANSFER_DOCTOR,fgm.MEM_TYPE
+        from  fu_record fr,fu_group_record fgr,fu_group_member fgm
+        where fr.id = fgr.RECORD_ID
+        and fgm.GROUP_ID = fgr.GROUP_ID
+        and fr.PATIENT_ID=#{patientId}
+        and fgr.GROUP_ID = #{groupId}
+    </select>
+
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.PaysuccessRecordMapper">
+    <sql id="selectRegisterSucesessRecordByOrderId">
+        o.id orderId,total_fee,visit_date,r.visit_time,r.hospital_name,o.order_status,
+        diagnoseroom diagnoseRoom,r.his_order_id,r.create_time,p.name patientName,d.ch_name doctorName,org.org_name deptName  </sql>
+
+    <select id="selectRegisterSucesessRecordByOrderId" resultMap="registerSucesessRecordVO">
+        select DISTINCT
+        <include refid="selectRegisterSucesessRecordByOrderId"/>
+        from m_order o
+        join m_registration r
+        on o.reg_id=r.id
+        join m_doctor d
+        on r.doctor_id = d.doctor_id
+        join m_patient p
+        on p.esb_patient_id = r.patient_id
+        join m_org org
+        on r.dept_id = org.org_id
+        WHERE ROWNUM =1
+        AND o.id=#{orderId}
+    </select>
+
+    <resultMap id="registerSucesessRecordVO" type="com.ry.fu.esb.medicaljournal.model.RegisterSucesessRecordVO">
+
+       <!-- <result property="orderId" column="oId" jdbcType="VARCHAR"/>
+        <result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
+        <result property="totalFee" column="total_fee" jdbcType="NUMERIC"/>
+        <result property="visitDate" column="visit_date" />
+        <result property="visitTime" column="visit_time" jdbcType="VARCHAR"/>
+        <result property="hisOrderId" column="his_order_id" jdbcType="NUMERIC"/>
+        <result property="diagnoseRoom" column="diagnoseroom" jdbcType="VARCHAR"/>
+        <result property="hospitalName" column="hospital_name" jdbcType="VARCHAR"/>
+        <result property="patientName" column="pName" jdbcType="VARCHAR"/>
+        <result property="doctorName" column="doctorName" jdbcType="VARCHAR"/>
+        <result property="deptName" column="org_name" jdbcType="VARCHAR"/>-->
+    </resultMap>
+
+    <select id="selectPaySucesessRecordByOrderId" resultMap="paySucesessRecordVO">
+        select o.id oId,o.total_fee,o.personal_fee,o.order_status,o.orderDesc,p.name pName
+        from m_order o
+        join m_registration r
+        on o.reg_id=r.id
+        join m_patient p
+        on p.esb_patient_id = r.patient_id
+        WHERE ROWNUM =1
+        AND o.id=#{orderId}
+    </select>
+
+    <resultMap id="paySucesessRecordVO" type="com.ry.fu.esb.medicaljournal.model.PaySucesessRecordVO">
+
+        <result property="orderId" column="oId" jdbcType="VARCHAR"/>
+        <result property="totalFee" column="total_fee" jdbcType="NUMERIC"/>
+        <result property="personalFee" column="personal_fee" jdbcType="NUMERIC"/>
+        <result property="orderStatus" column="order_status" jdbcType="VARCHAR"/>
+        <result property="orderDesc" column="orderDesc" jdbcType="VARCHAR"/>
+        <result property="patientName" column="pName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+</mapper>

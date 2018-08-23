@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.RegOrderMapper">
+
+    <select id="selectWaittingPayment" resultMap="regOrderVO">
+        select
+        r.account_id ,o.create_time,o.id orderId,r.patient_id
+        from m_order o, m_registration r
+        where o.reg_id = r.id
+        and round(to_number(sysdate-o.create_time)*60*24)&lt;11
+        and round(to_number(sysdate-o.create_time)*1440)>5
+        order by o.create_time desc
+    </select>
+
+
+    <!--<resultMap id="regOrderVO" type="com.ry.fu.esb.medicaljournal.model.RegOrderVO">
+
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="accountId" column="ACCOUNT_ID" jdbcType="NUMERIC"/>
+        <result property="createdTime" column="CREATE_TIME" />
+    </resultMap>-->
+
+    <!--通知当天就诊-->
+    <select id="seeDoctorTodayInform" resultMap="regOrderVO">
+        select
+        r.account_id ,o.create_time,o.id orderId,r.patient_id,r.waittime,r.diagnoseroom,r.visit_date,r.visit_time,p.name
+        from M_REGISTRATION r
+        join m_order o
+        on  o.reg_id=r.id
+        join m_patient p
+        on p.ESB_PATIENT_ID = r.patient_id
+        and o.ORDER_STATUS = '1'
+        and (o.fee_type='诊查费'
+        OR o.fee_type='挂号费')
+        and ceil(r.VISIT_DATE-sysdate)= '0'
+        and round(r.WAITTIME-to_date('1970-01-01','yyyy-mm-dd'))='1'
+    </select>
+    <!--通知次日就诊-->
+    <select id="seeDoctorTomorrowInform" resultMap="regOrderVO">
+        select
+        r.account_id ,o.create_time,o.id orderId,r.patient_id,r.waittime,r.diagnoseroom,r.visit_date,r.visit_time,p.name
+        from M_REGISTRATION r
+        join m_order o
+        on  o.reg_id=r.id
+        join m_patient p
+        on p.ESB_PATIENT_ID = r.patient_id
+        and o.ORDER_STATUS = '1'
+        and (o.fee_type='诊查费'
+        OR o.fee_type='挂号费')
+        and ceil(r.VISIT_DATE-sysdate)= '1'
+        and round(r.WAITTIME-to_date('1970-01-01','yyyy-mm-dd'))='0'
+    </select>
+
+    <!--同步就诊状态-->
+    <select id="syncDiagnoseFlag" resultMap="regOrderVO">
+        select
+        r.account_id ,o.create_time,o.id orderId,r.patient_id,r.waittime,r.diagnoseroom,r.visit_date,r.visit_time,p.name
+        from M_REGISTRATION r
+        join m_order o
+        on  o.reg_id=r.id
+        join m_patient p
+        on p.ESB_PATIENT_ID = r.patient_id
+        and (o.ORDER_STATUS = '1'
+        OR o.ORDER_STATUS = '7')
+        AND o.ORDER_STATUS != '8'
+        and (o.fee_type='诊查费'
+        OR o.fee_type='挂号费')
+        and ceil(r.VISIT_DATE-sysdate)= '0'
+    </select>
+
+    <resultMap id="regOrderVO" type="com.ry.fu.esb.medicaljournal.model.RegOrderVO">
+      <!--  <id property="id" column="id" jdbcType="NUMERIC"/>-->
+        <result property="accountId" column="ACCOUNT_ID" jdbcType="NUMERIC"/>
+        <result property="orderId" column="orderId" jdbcType="VARCHAR"/>
+        <result property="patientId" column="PATIENT_ID" jdbcType="NUMERIC"/>
+        <result property="waitTime" column="WAITTIME" />
+        <result property="createdTime" column="CREATE_TIME" />
+        <result property="visitTime" column="VISIT_TIME" jdbcType="VARCHAR"/>
+        <result property="patientName" column="NAME" jdbcType="VARCHAR"/>
+        <result property="diagnoseRoom" column="DIAGNOSEROOM" jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.FeeTypeMapper">
+
+    <select id="findFeeType" resultMap="feeType">
+       select s.id,s.type_pid pId,p.type_name pTypeName ,s.type_name sTypeName ,s.type_no sTypeNo
+       from m_fee_type p
+       inner join m_fee_type s
+       on p.type_no = s.type_pid
+       and s.type_pid is not null
+       and s.type_pid !=1
+    </select>
+
+
+    <resultMap id="feeType" type="com.ry.fu.esb.medicaljournal.model.FeeType">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="pId" column="pId" jdbcType="NUMERIC"/>
+        <result property="pTypeName" column="pTypeName" jdbcType="VARCHAR"/>
+
+        <result property="sTypeNo" column="sTypeNo" jdbcType="NUMERIC"/>
+        <result property="sTypeName" column="sTypeName" jdbcType="VARCHAR"/>
+        <!--<collection property="feeTypeDetail"  javaType="list" ofType="com.ry.fu.esb.medicaljournal.model.FeeType">
+            &lt;!&ndash;<id column="sId" property="sId" jdbcType="NUMERIC"/>&ndash;&gt;
+        </collection>-->
+    </resultMap>
+
+</mapper>

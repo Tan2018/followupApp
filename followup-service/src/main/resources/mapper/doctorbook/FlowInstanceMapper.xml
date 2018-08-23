@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.FlowInstanceMapper">
+
+    <resultMap id="FlowInstanceMap" type="com.ry.fu.followup.doctorbook.model.FlowInstance">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="quesId" column="ques_id" jdbcType="NUMERIC"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="startFollowType" column="start_follow_type" jdbcType="INTEGER"/>
+        <result property="unit" column="unit" jdbcType="INTEGER"/>
+
+
+    </resultMap>
+
+    <select id="queryReportDateByQuesId" resultMap="FlowInstanceMap">
+        select ffi.id,ffi.ques_id,ffi.name,ffi.start_follow_type,ffi.unit,ffi.start_follow_time,ffi.DESCRIBE
+        from  FU_FLOW_INSTANCE ffi
+        where  ffi.ques_id = #{quesId}
+        order by ffi.time
+    </select>
+
+
+    <update id="updateStatus">
+        update fu_follow_program_instance set status = #{status}
+        where id=#{flowProgramInstanceId}
+    </update>
+
+    <select id="queryFuInstanceByPatientId" resultType="java.util.Map">
+        <!--
+        SELECT ffi.id as "flowInstanceId",ffi.CREATE_TIME as "time",CONCAT(CONCAT('第',rownum),'次随访病案') as "rownums"
+            FROM fu_flow_instance ffi,
+              fu_questionnaire fq,
+              fu_group_record fgr,
+              fu_record fr
+            WHERE ffi.ques_id      = fq.id
+            AND fq.group_record_id = fgr.id
+            AND fgr.record_id      = fr.id
+            AND fr.hosp_no         =#{hospNo}
+            AND ffi.status         =#{status}
+            ORDER BY ffi.CREATE_TIME desc
+            -->
+        SELECT  ffi.id                        AS "flowInstanceId",
+        ffi.CREATE_TIME                    AS "time",
+        CONCAT(CONCAT('第',rownum),'次随访病案') AS "rownums"
+        from
+        fu_record fr, fu_group_record fgr, FU_QUESTIONNAIRE  fq,FU_FLOW_INSTANCE ffi
+        where fr.id = fgr.RECORD_ID
+        and fgr.id =fq.GROUP_RECORD_ID
+        and fq.id = ffi.QUES_ID
+        and fr.PATIENT_ID = #{patientId}
+        AND ffi.status         = #{status}
+        ORDER BY ffi.CREATE_TIME DESC
+
+
+    </select>
+
+</mapper>

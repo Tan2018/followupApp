@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.QuestionnaireMapper">
+    <resultMap id="QuestionnaireMap" type="com.ry.fu.followup.doctorbook.model.Questionnaire">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="queryQuestionnaireByPatientAndPrjId" resultMap="QuestionnaireMap">
+        select fq.id as "id",fq.name as "name" from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_QUESTIONNAIRE fq, fu_record fr,fu_patient fp
+        where fg.id = fgr.group_id
+        and fgr.id = fq.group_record_id
+        and fgr.record_id = fr.id
+        and fr.patient_id = fp.id
+        and fp.id = #{patientId}
+        and fg.id = #{projectId}
+    </select>
+
+</mapper>

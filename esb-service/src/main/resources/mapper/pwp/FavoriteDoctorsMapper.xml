@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.FavoriteDoctorsMapper">
+
+   <sql id="favorDoctorInfo">
+      d.id,d.org_id,d.org_name,d.ch_name,d.good_at,d.head_img,d.profess_name,d.doctor_id
+    </sql>
+
+
+    <!-- <sql id="favoriteDoctor">
+      id,account_id,doctor_id,create_time
+    </sql>-->
+
+    <select id="findFavoriteDoctor" resultMap="favorDoctorInfo">
+        SELECT
+        <include refid="favorDoctorInfo"/>
+        FROM m_favorites f
+        LEFT JOIN m_doctor d
+        ON  f.doctor_id = d.doctor_id
+        WHERE f.account_id =#{arg0}
+        ORDER BY f.create_time DESC
+    </select>
+
+   <!-- <select id="isCollection" resultMap="favorDoctor">
+        SELECT
+        <include refid="favoriteDoctor"/>
+        FROM m_favorites f
+        WHERE f.account_id =#{arg0}
+    </select>
+
+    <delete id="cancelCollection">
+        DELETE FROM m_favorites f
+        WHERE f.account_id =#{arg0}
+        AND f.doctor_id =#{arg1}
+    </delete>-->
+
+   <!-- <insert id="add2Favorites" parameterType="com.ry.fu.esb.medicaljournal.model.FavoriteDoctor">
+        insert into m_favorites
+        (<include refid="favoriteDoctor"/>)
+        values(#{id},#{accountId},#{doctorId,jdbcType=NUMERIC},#{createTime})
+    </insert>-->
+
+
+    <resultMap id="favorDoctorInfo" type="com.ry.fu.esb.medicaljournal.model.DoctorInfo">
+
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="orgId" column="org_id" jdbcType="NUMERIC"/>
+        <result property="orgName" column="org_name" jdbcType="VARCHAR"/>
+        <result property="doctorId" column="doctor_Id" jdbcType="NUMERIC"/>
+        <result property="chName" column="ch_name" jdbcType="VARCHAR"/>
+        <result property="headImg" column="head_img" jdbcType="VARCHAR"/>
+        <result property="processName" column="profess_name" jdbcType="VARCHAR"/>
+        <result property="goodAt" column="good_at" jdbcType="VARCHAR"/>
+
+    </resultMap>
+
+   <!-- <resultMap id="favorDoctor" type="com.ry.fu.esb.medicaljournal.model.FavoriteDoctor">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="accountId" column="account_id" jdbcType="NUMERIC"/>
+        <result property="doctorId" column="doctor_id" jdbcType="NUMERIC"/>
+        <result property="createTime" column="create_time" jdbcType="DATE"/>
+    </resultMap>-->
+
+</mapper>

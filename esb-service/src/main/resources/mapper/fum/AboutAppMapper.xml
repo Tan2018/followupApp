@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.medicaljournal.mapper.AboutAppMapper">
+    <resultMap id="AboutAppResult" type="com.ry.fu.esb.medicaljournal.model.AboutApp">
+        <id column="aId" property="id" jdbcType="NUMERIC"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <association property="pwpUpload" column="id" javaType="com.ry.fu.esb.pwp.model.PwpUpload">
+            <id property="id" column="fileId" jdbcType="NUMERIC"  />
+            <result property="fileName" column="FILENAME" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+
+    <select id="selectAboutAppInfo" parameterType="string" resultMap="AboutAppResult">
+        select a.id aId,a.title,a.content,a.img ,u.filename,u.id fileId
+
+        from m_About_App a
+        JOIN pwp_upload u
+        on a.img=u.id
+        where a.use_type=#{useType}
+
+    </select>
+</mapper>

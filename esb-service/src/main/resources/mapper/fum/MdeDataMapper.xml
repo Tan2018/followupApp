@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.doctorbook.mapper.DepartmentsMapper">
+
+    <select id="handoverStatistics" parameterType="map" resultType="com.ry.fu.esb.doctorbook.model.HandoverStatisticsInfo">
+        select * from(
+        select a1.*,rownum rn from(
+        select p.BED_NO,p.PATIENT_NAME,m.SHIFT_DOCTOR,(select c.CH_NAME from M_DOCTOR c where c.doctor_id = m.SHIFT_DOCTOR) CH_NAME,
+        m.TAKE_DOCTOR,(select c.CH_NAME from M_DOCTOR c where c.doctor_id = m.TAKE_DOCTOR) JH_NAME,
+        to_char(m.SHIFT_TIME,'HH24:mi') SHIFT_TIME,to_char(m.TAKE_TIME,'HH24:mi') TAKE_TIME,p.org_name from M_HOSPITAL_PATIENT p
+        inner join M_CS_DATA m on p.patient_id = m.patient_id where p.org_name = (select g.org_name from M_ORG g where g.org_id = #{orgId})
+        and to_char(m.SHIFT_TIME,'yyyy/MM/dd') = #{date}) a1 where rownum &lt;=((#{pageSum}-1)*#{pageSize})+#{pageSize}) where rn &gt;=((#{pageSum}-1)*#{pageSize}+1)
+    </select>
+
+    <resultMap id="depMap" type="com.ry.fu.esb.doctorbook.model.DepartmentsStatisticsInfo">
+        <id column="ID" property="id" javaType="Long"></id>
+        <result column="SHIFT_DOCTOR" property="shiftDoctor" javaType="Long"></result>
+        <result column="CH_NAME" property="chName" javaType="String"></result>
+        <result column="TAKE_DOCTOR" property="takeDoctor" javaType="Long"></result>
+        <result column="JH_NAME" property="jhName" javaType="String"></result>
+        <result column="ORG_NAME" property="orgName" javaType="String"></result>
+        <result column="SHIFT_TIME" property="shiftTime" javaType="String"></result>
+        <result column="TAKE_TIME" property="takeTime" javaType="String"></result>
+        <result column="DESCRIBE" property="description" javaType="String"></result>
+        <!--<collection property="deDoctorInfoList" select="getDoc" column="ID" javaType="ArrayList" ofType="com.ry.fu.esb.doctorbook.model.DeDoctorDocInfo">
+        </collection>-->
+        <collection property="pictures" select="queryPictures" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+        <collection property="musics" select="queryMusics" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+    </resultMap>
+
+    <select id="departmentsStatistics" parameterType="map" resultMap="depMap">
+        select * from(
+        select a1.*,rownum rn from(
+        select d.ID,d.shift_doctor,(select c.CH_NAME from M_DOCTOR c where c.doctor_id = d.shift_doctor) CH_NAME,
+        d.take_doctor,
+        (select r.CH_NAME from M_DOCTOR r where r.doctor_id = d.take_doctor) JH_NAME,o.org_name,
+        d.shift_time SHIFT_TIME,
+        d.take_time TAKE_TIME,
+        d.DESCRIBE
+        from M_DE_DATA d
+        inner join M_ORG o on d.org_id = o.org_id
+        <if test="flag == 1">
+            where to_char(d.shift_time,'YYYY/MM/DD') = #{date}
+        </if>
+        ) a1 where rownum &lt;=((#{pageSum}-1)*#{pageSize})+#{pageSize}) where rn &gt;=((#{pageSum}-1)*#{pageSize}+1)
+    </select>
+
+    <!--<select id="getDoc" resultType="com.ry.fu.esb.doctorbook.model.DeDoctorDocInfo">
+      select d.ID DE_ID,d.doctor_id,o.ch_name from M_DE_DOCTOR d inner join M_DOCTOR o on  d.doctor_id = o.doctor_id where d.de_id = #{ID}
+    </select>-->
+
+    <select id="queryPictures" resultType="String">
+      select f.FILE_PATH from M_PT_FILE f where PC_ID = #{ID} and f.FLAG = 9
+    </select>
+
+    <select id="queryMusics" resultType="String">
+        select f.FILE_PATH from M_PT_FILE f where PC_ID = #{ID} and f.FLAG = 8
+    </select>
+
+
+    <select id="queryOtherDepPatient" resultType="com.ry.fu.esb.doctorbook.model.OtherDepInfo">
+        select m.ID,m.ORG_ID,m.TAKE_DOCTOR,m.PATIENT_ID,r.DOCTOR_ID,m.BED_NO,m.HOSPITAL_DAY,m.STR_DIAGNOSIS,
+        m.ST_STATE,m.SHIFT_TIME,m.TAKE_TIME,m.PATIENT_NAME,r.GROUP_ID,r.DOCTOR_NAME,r.ST_WORD,m.ISO_HTER_DEPT,
+        m.P_AGE,m.P_SEX from m_pt_record r
+        inner join M_OTHER_DEP m on r.id = m.patient_id where m.TAKE_DOCTOR = #{takeDoctor} and m.st_state = #{stState}
+        order by m.SHIFT_TIME desc
+    </select>
+
+
+    <resultMap id="depLogMap" type="com.ry.fu.esb.doctorbook.model.DepartmentsStatisticsInfoLog">
+        <result column="SHIFT_DOCTOR" property="shiftDoctor" javaType="Long"></result>
+        <result column="CH_NAME" property="chName" javaType="String"></result>
+        <result column="SHIFT_TIME" property="shiftTime" ></result>
+        <result column="DESCRIBE" property="describe" javaType="String"></result>
+        <collection property="pictures" select="queryPictures" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+        <collection property="musics" select="queryMusics" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+    </resultMap>
+
+    <select id="departmentsStatisticsLog" parameterType="map" resultMap="depLogMap">
+        select * from(
+        select a1.*,rownum rn from(
+        select d.ID,d.shift_doctor,(select c.CH_NAME from M_DOCTOR c where c.doctor_id = d.shift_doctor) CH_NAME,
+        d.take_doctor,
+        (select r.CH_NAME from M_DOCTOR r where r.doctor_id = d.take_doctor) JH_NAME,
+        d.shift_time SHIFT_TIME,
+        d.take_time TAKE_TIME,
+        d.DESCRIBE
+        from M_DE_DATA d where d.org_id = #{depId} order by d.shift_time desc
+        ) a1 where rownum &lt;=((#{pageSum}-1)*#{pageSize})+#{pageSize}) where rn &gt;=((#{pageSum}-1)*#{pageSize}+1)
+    </select>
+
+    <resultMap id="OtherDepInfoLogMap" type="com.ry.fu.esb.doctorbook.model.OtherDepInfoLog">
+        <id column="ID" property="id" javaType="Long"></id>
+        <result column="TAKE_DOCTOR" property="takeDoctor" javaType="String"></result>
+        <result column="PATIENT_ID" property="patientId" javaType="String"></result>
+        <result column="SHIFT_TIME" property="shiftTime" javaType="String"></result>
+        <result column="SHIFTWORD" property="shiftword" javaType="String"></result>
+        <collection property="pictures" select="queryImg" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+        <collection property="musics" select="queryMu" column="ID" javaType="ArrayList" ofType="String">
+        </collection>
+    </resultMap>
+
+
+    <select id="OtherDepInfoLog" parameterType="map" resultMap="OtherDepInfoLogMap">
+         select * from(
+        select a1.*,rownum rn from(
+         select m.ID,m.shift_doctor,m.Doctor_Name,m.shift_time,m.shiftword from
+         M_OTHER_DEP m where m.PATIENT_ID = #{patientId} and m.TAKE_DOCTOR = #{shiftDoctor}
+         and m.ORG_ID = #{orgId} and m.GROUP_ID = #{groupId} and m.TYPE = #{types}
+         ) a1 where rownum &lt;=((#{pageSum}-1)*#{pageSize})+#{pageSize}) where rn &gt;=((#{pageSum}-1)*#{pageSize}+1)
+    </select>
+
+    <select id="queryImg" resultType="String">
+     select f.FILE_PATH from M_PT_FILE f where PC_ID = #{ID} and f.FLAG = 0
+    </select>
+
+    <select id="queryMu" resultType="String">
+        select f.FILE_PATH from M_PT_FILE f where PC_ID = #{ID} and f.FLAG = 1
+    </select>
+
+    <select id="queryOtherDepInfoLogCount" resultType="Integer" parameterType="map">
+        select count(1) from M_OTHER_DEP m where m.PATIENT_ID = #{patientId} and m.TAKE_DOCTOR = #{shiftDoctor} and m.ORG_ID = #{orgId} and m.GROUP_ID = #{groupId} and m.TYPE = #{types}
+    </select>
+</mapper>

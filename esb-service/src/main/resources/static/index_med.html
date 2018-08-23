@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>支付页面</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- 引入 Bootstrap
+	<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	 -->
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css">
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap-theme.css">
+	<script src="bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+	<script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+
+
+	<script>
+		/*var prePay = "http://cjppgv.natappfree.cc/esb/followupApp/v1/medicalJournal/payMed/preMedCashierPay";
+		var preAuth = "http://cjppgv.natappfree.cc/esb/followupApp/v1/medicalJournal/payMed/preMedAuth";
+		var preQuery = "http://cjppgv.natappfree.cc/esb/followupApp/v1/medicalJournal/payMed/queryOrderStatus";
+		var preRefund = "http://cjppgv.natappfree.cc/esb/followupApp/v1/medicalJournal/payMed/refundMedPay";*/
+
+        var prePay = "http://127.0.0.1:2017/esb/followupApp/v1/medicalJournal/payMed/preMedCashierPay";
+        var preAuth = "http://127.0.0.1:2017/esb/followupApp/v1/medicalJournal/payMed/preMedAuth";
+        var preQuery = "http://127.0.0.1:2017/esb/followupApp/v1/medicalJournal/payMed/queryOrderStatus";
+        var preRefund = "http://127.0.0.1:2017/esb/followupApp/v1/medicalJournal/payMed/refundMedPay";
+		$(function() {
+		    //发起授权申请
+            var reqAuthData = {};
+            $("#preBtn_authCode").on('click', function() {
+                reqData.idCard = $('#idCard').val();
+                reqData.userName = $('#userName').val();
+                reqData.phoneNumber = $('#phoneNumber_auth').val();
+                reqData.redirectUrl = $('#redirectUrl_authCode').val();
+                reqData.mchUserId = $('#mchUserId_authCode').val();
+                console.log(reqData);
+                $.ajax({
+                    type : "POST",
+                    dataType : "json",
+                    url : preAuth,
+                    contentType : "application/json",
+                    data : JSON.stringify(reqData),
+                    success: function (result) {
+                        console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.status == '200' || result.status == 200) {
+                            //成功
+                            $('#authCodeForm2 [name=idCard]').val(result.data.idCard);
+                            $('#authCodeForm2 [name=userName]').val(result.data.userName);
+                            $('#authCodeForm2 [name=phoneNumber]').val(result.data.phoneNumber);
+                            $('#authCodeForm2 [name=redirectUrl]').val(result.data.redirectUrl);
+                            $('#authCodeForm2 [name=mchId]').val(result.data.mchId);
+                            $('#authCodeForm2 [name=mchUserId]').val(result.data.mchUserId);
+                            $('#authCodeForm2 [name=timestamp]').val(result.data.timestamp);
+                            $('#authCodeForm2 [name=attach]').val(result.data.attach);
+                            $('#authCodeForm2 [name=notifyUrl]').val(result.data.notifyUrl);
+                            $('#authCodeForm2 [name=sign]').val(result.data.sign);
+                            $('#authCodeForm2 [name=formAction]').val(result.data.formAction);
+
+                        } else {
+                            //失败
+                            console.log('失败');
+                        }
+                    },
+                    error : function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+            //授权接口调用
+            $("#authCodeBtn").on('click', function() {
+                $.ajax({
+                    type : "post",
+                    dataType : "json",
+                    url : "http://medicaredev.sun309.cn/api/medicare/authorize",
+                    data :  $('#authCodeForm2').serialize(),
+                    success: function (result) {
+                        alert(result);
+                        console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.status == '200' || result.status == 200) {
+
+
+                        } else {
+                            //失败
+                            console.log('失败');
+                        }
+                    },
+                    error : function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+
+			//发起预支付申请
+			var reqData = {};
+			$("#preBtn").on('click', function() {
+				reqData.phoneNumber = $('#phoneNumber').val();
+				reqData.medicareUserName = $('#medicareUserName').val();
+				reqData.productName = $('#productName').val();
+				reqData.productDesc = $('#productDesc').val();
+				reqData.orderAmount = $('#orderAmount').val();
+				reqData.redirectUrl = $('#redirectUrl').val();
+				reqData.mchUserId = $('#mchUserId').val();
+				reqData.mchOrderNo = $('#mchOrderNo').val();
+				reqData.attach = $('#attach').val();
+				reqData.authCode = $('#authCode_prePay').val();
+				console.log(reqData);
+				$.ajax({
+					type : "POST",
+					dataType : "json",
+					url : prePay,
+					contentType : "application/json",
+					data : JSON.stringify(reqData),
+					success: function (result) {
+						console.log(result);//打印服务端返回的数据(调试用)
+						if(result.status == '200' || result.status == 200) {
+							//成功
+							$('#form2 [name=phoneNumber]').val(result.data.phoneNumber);
+							$('#form2 [name=medicareUserName]').val(result.data.medicareUserName);
+							$('#form2 [name=productName]').val(result.data.productName);
+							$('#form2 [name=productDesc]').val(result.data.productDesc);
+							$('#form2 [name=mchOrderNo]').val(result.data.mchOrderNo);
+							$('#form2 [name=orderAmount]').val(result.data.orderAmount);
+							$('#form2 [name=redirectUrl]').val(result.data.redirectUrl);
+							$('#form2 [name=mchUserId]').val(result.data.mchUserId);
+							$('#form2 [name=mchPlaceOrderTime]').val(result.data.mchPlaceOrderTime);
+							$('#form2 [name=mchId]').val(result.data.mchId);
+							$('#form2 [name=timestamp]').val(result.data.timestamp);
+							$('#form2 [name=notifyUrl]').val(result.data.notifyUrl);
+							$('#form2 [name=attach]').val(result.data.attach);
+							$('#form2 [name=authCode]').val(result.data.authCode);
+							$('#form2 [name=sign]').val(result.data.sign);
+						} else {
+							//失败
+							console.log('失败');
+						}
+					},
+					error : function(error) {
+						console.log(error);
+					}
+				});
+			});
+            //查询
+            var reqQueryData = {};
+            $("#preBtn_query").on('click', function() {
+                reqQueryData.mchOrderNo = $('#mchOrderNo_query').val();
+                reqQueryData.mchUserId = $('#mchUserId_query').val();
+                console.log(reqQueryData);
+                $.ajax({
+                    type : "POST",
+                    dataType : "json",
+                    url : preQuery,
+                    contentType : "application/json",
+                    data : JSON.stringify(reqQueryData),
+                    success: function (result) {
+                        console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.status == '200' || result.status == 200) {
+                            //成功
+                            // $('#authCodeForm2 [name=idCard]').val(result.data.idCard);
+                        } else {
+                            //失败
+                            console.log('失败');
+                        }
+                    },
+                    error : function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+            //退费
+            var reqRefundData = {};
+            $("#preBtn_refund").on('click', function() {
+                reqRefundData.mchOrderNo = $('#mchOrderNo_refund').val();
+                reqRefundData.mchUserId = $('#mchUserId_refund').val();
+                reqRefundData.refundAmount = $('#refundAmount').val();
+                reqRefundData.refundReason = $('#refundReason').val();
+                reqRefundData.authCode = $('#authCode_refund').val();
+                console.log(reqQueryData);
+                $.ajax({
+                    type : "POST",
+                    dataType : "json",
+                    url : preRefund,
+                    contentType : "application/json",
+                    data : JSON.stringify(reqRefundData),
+                    success: function (result) {
+                        console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.status == '200' || result.status == 200) {
+                            //成功
+                            // $('#authCodeForm2 [name=idCard]').val(result.data.idCard);
+                        } else {
+                            //失败
+                            console.log('失败');
+                        }
+                    },
+                    error : function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+		});
+	</script>
+</head>
+<body>
+	<div class="container">
+        <form role="form" id="authCodeForm" method="post" >
+            <div class="form-group">
+                <label for="idCard">idCard</label>
+                <input type="text" class="form-control" id="idCard" value="130121199106063219" placeholder="请输入idCard">
+            </div>
+            <div class="form-group">
+                <label for="userName">userName</label>
+                <input type="text" class="form-control" id="userName" value="胡士杰" placeholder="请输入userName">
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">phoneNumber</label>
+                <input type="text" class="form-control" id="phoneNumber_auth" value="18122020814" placeholder="请输入phoneNumber">
+            </div>
+            <div class="form-group">
+                <label for="redirectUrl">redirectUrl</label>
+                <input type="text" class="form-control" id="redirectUrl_authCode" value="http://localhost:2017/esb/followupApp/v1/medicalJournal/medNotify/payMedAuthCallBack" placeholder="请输入redirectUrl">
+            </div>
+            <div class="form-group">
+                <label for="mchUserId">mchUserId</label>
+                <input type="text" class="form-control" id="mchUserId_authCode" value="4858533" placeholder="请输入mchUserId">
+            </div>
+
+            <button type="button" id="preBtn_authCode" class="btn btn-default">授权申请</button>
+        </form>
+
+
+        <form role="form" id="authCodeForm2"  action="http://medicaredev.sun309.cn/api/medicare/authorize" method="post" >
+            <div class="form-group">authorize
+                <label for="idCard">idCard</label>
+                <input type="text" class="form-control" name="idCard"  placeholder="请输入idCard">
+            </div>
+            <div class="form-group">
+                <label for="userName">userName</label>
+                <input type="text" class="form-control" name="userName"  placeholder="请输入userName">
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">phoneNumber</label>
+                <input type="text" class="form-control" name="phoneNumber"  placeholder="请输入phoneNumber">
+            </div>
+            <div class="form-group">
+                <label for="redirectUrl">redirectUrl</label>
+                <input type="text" class="form-control" name="redirectUrl"  placeholder="请输入redirectUrl">
+            </div>
+            <div class="form-group">
+                <label for="mchId">mchId</label>
+                <input type="text" class="form-control" name="mchId"  placeholder="请输入mchId">
+            </div>
+            <div class="form-group">
+                <label for="mchUserId">mchUserId</label>
+                <input type="text" class="form-control" name="mchUserId"  placeholder="请输入mchUserId">
+            </div>
+            <div class="form-group">
+                <label for="timestamp">timestamp</label>
+                <input type="text" class="form-control" name="timestamp"  placeholder="请输入timestamp">
+            </div>
+            <div class="form-group">
+                <label for="attach">attach</label>
+                <input type="text" class="form-control" name="attach"  placeholder="请输入attach">
+            </div>
+            <div class="form-group">
+                <label for="notifyUrl">notifyUrl</label>
+                <input type="text" class="form-control" name="notifyUrl"  placeholder="请输入notifyUrl">
+            </div>
+            <div class="form-group">
+                <label for="sign">sign</label>
+                <input type="text" class="form-control" name="sign"  placeholder="请输入sign">
+            </div>
+            <button id="authCodeBtn" type="submit"  class="btn btn-default">提交</button>
+        </form>
+
+
+		<form role="form" id="prePayForm" method="post" >
+			<div class="form-group">
+				<label for="phoneNumber">phoneNumber</label>
+				<input type="text" class="form-control" id="phoneNumber" value="18122020814" placeholder="请输入phoneNumber">
+			</div>
+			<div class="form-group">
+				<label for="medicareUserName">medicareUserName</label>
+				<input type="text" class="form-control" id="medicareUserName" value="胡士杰" placeholder="请输入medicareUserName">
+			</div>
+			<div class="form-group">
+				<label for="productName">productName</label>
+				<input type="text" class="form-control" id="productName" value="医保支付测试商品" placeholder="请输入productName">
+			</div>
+			<div class="form-group">
+				<label for="productDesc">productDesc</label>
+				<input type="text" class="form-control" id="productDesc" value="医保支付测试商品描述" placeholder="请输入productDesc">
+			</div>
+			<div class="form-group">
+				<label for="mchOrderNo">mchOrderNo</label>
+				<input type="text" class="form-control" id="mchOrderNo"  placeholder="请输入mchOrderNo,多个用逗号分隔">
+			</div>
+			<div class="form-group">
+				<label for="orderAmount">orderAmount</label>
+				<input type="text" class="form-control" id="orderAmount" value="10" placeholder="请输入orderAmount">
+			</div>
+			<div class="form-group">
+				<label for="redirectUrl">redirectUrl</label>
+				<input type="text" class="form-control" id="redirectUrl" value="http://localhost:2017/esb/followupApp/v1/medicalJournal/medNotify/payMedReturn" placeholder="请输入redirectUrl">
+			</div>
+
+			<div class="form-group">
+				<label for="mchUserId">mchUserId</label>
+				<input type="text" class="form-control" id="mchUserId" value="4858533" placeholder="mchUserId">
+			</div>
+
+            <div class="form-group">
+                <label for="attach">attach</label>
+                <input type="text" class="form-control" id="attach" value="a=1&b=yct" placeholder="attach">
+            </div>
+
+            <div class="form-group">
+                <label for="authCode">authCode</label>
+                <input type="text" class="form-control" id="authCode_prePay"  placeholder="attach">
+            </div>
+
+			<button type="button" id="preBtn" class="btn btn-default">预支付申请</button>
+		</form>
+		<form role="form" id="form2" action="http://medicaredev.sun309.cn/api/medicare/cashier" method="post" >
+            <div class="form-group">
+                <label for="phoneNumber">phoneNumber</label>
+                <input type="text" class="form-control" name="phoneNumber"  placeholder="请输入phoneNumber">
+            </div>
+            <div class="form-group">
+                <label for="medicareUserName">medicareUserName</label>
+                <input type="text" class="form-control" name="medicareUserName"  placeholder="请输入medicareUserName">
+            </div>
+            <div class="form-group">
+                <label for="productName">productName</label>
+                <input type="text" class="form-control" name="productName"  placeholder="请输入productName">
+            </div>
+            <div class="form-group">
+                <label for="productDesc">productDesc</label>
+                <input type="text" class="form-control" name="productDesc"  placeholder="请输入productDesc">
+            </div>
+            <div class="form-group">
+                <label for="orderAmount">orderAmount</label>
+                <input type="text" class="form-control" name="orderAmount"  placeholder="请输入orderAmount">
+            </div>
+            <div class="form-group">
+                <label for="redirectUrl">redirectUrl</label>
+                <input type="text" class="form-control" name="redirectUrl" placeholder="请输入redirectUrl">
+            </div>
+            <div class="form-group">
+                <label for="mchUserId">mchUserId</label>
+                <input type="text" class="form-control" name="mchUserId"  placeholder="mchUserId">
+            </div>
+            <div class="form-group">
+                <label for="mchPlaceOrderTime">mchPlaceOrderTime</label>
+                <input type="text" class="form-control" name="mchPlaceOrderTime" value="" placeholder="mchPlaceOrderTime">
+            </div>
+            <div class="form-group">
+                <label for="authCode">authCode</label>
+                <input type="text" class="form-control" name="authCode"  placeholder="authCode">
+            </div>
+            <div class="form-group">
+                <label for="mchId">mchId</label>
+                <input type="text" class="form-control" name="mchId"  placeholder="mchId">
+            </div>
+            <div class="form-group">
+                <label for="timestamp">timestamp</label>
+                <input type="text" class="form-control" name="timestamp" placeholder="timestamp">
+            </div>
+            <div class="form-group">
+                <label for="attach">attach</label>
+                <input type="text" class="form-control" name="attach"  placeholder="attach">
+            </div>
+            <div class="form-group">
+                <label for="mchOrderNo">mchOrderNo</label>
+                <input type="text" class="form-control" name="mchOrderNo"  placeholder="mchOrderNo">
+            </div>
+            <div class="form-group">
+                <label for="notifyUrl">notifyUrl</label>
+                <input type="text" class="form-control" name="notifyUrl"  placeholder="notifyUrl">
+            </div>
+            <div class="form-group">
+                <label for="sign">sign</label>
+                <input type="text" class="form-control" name="sign"  placeholder="sign">
+            </div>
+			<button type="submit" id="preBtn_prayForm2" class="btn btn-default">提交</button>
+		</form>
+
+
+
+        <form role="form" id="queryForm" method="post" >
+            <div class="form-group">
+                <label for="mchOrderNo">mchOrderNo</label>
+                <input type="text" class="form-control" id="mchOrderNo_query" value="1522219610907" placeholder="请输入mchOrderNo">
+            </div>
+            <div class="form-group">
+                <label for="mchUserId">mchUserId</label>
+                <input type="text" class="form-control" id="mchUserId_query" value="4858533" placeholder="请输入mchUserId">
+            </div>
+            <button type="button" id="preBtn_query" class="btn btn-default">查询</button>
+        </form>
+
+        <form role="form" id="refundForm" method="post" >
+            <div class="form-group">
+                <label for="mchOrderNo">mchOrderNo</label>
+                <input type="text" class="form-control" id="mchOrderNo_refund" value="1522219610907" placeholder="请输入mchOrderNo">
+            </div>
+            <div class="form-group">
+                <label for="mchUserId">mchUserId</label>
+                <input type="text" class="form-control" id="mchUserId_refund" value="4858533" placeholder="请输入mchUserId">
+            </div>
+            <div class="form-group">
+                <label for="refundAmount">refundAmount</label>
+                <input type="text" class="form-control" id="refundAmount"  placeholder="请输入refundAmount">
+            </div>
+            <div class="form-group">
+                <label for="refundReason">refundReason</label>
+                <input type="text" class="form-control" id="refundReason" value="测试退费" placeholder="请输入refundReason">
+            </div>
+            <div class="form-group">
+                <label for="authCode">authCode</label>
+                <input type="text" class="form-control" id="authCode_refund"  placeholder="请输入authCode">
+            </div>
+            <button type="button" id="preBtn_refund" class="btn btn-default">退费</button>
+        </form>
+	</div>
+	
+		
+</body>
+
+<html>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.esb.pwp.mapper.NodtlMapper">
+
+    <resultMap id="nodtlMap" type="com.ry.fu.esb.pwp.model.PwpNodtl">
+        <id property="nextid" column="nextid" jdbcType="NUMERIC"/>
+    </resultMap>
+
+    <select id="getNextId" resultMap="nodtlMap" parameterType="java.lang.String">
+      select
+        nextid
+      from pwp_nodtl where noid = #{noId}
+    </select>
+
+    <update id="updateNextId" parameterType="com.ry.fu.esb.pwp.model.PwpNodtl">
+        update pwp_nodtl set nextid = nextid + 1
+        where noid = #{noId}
+    </update>
+
+</mapper>

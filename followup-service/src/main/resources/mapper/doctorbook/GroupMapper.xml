@@ -1,0 +1,963 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.GroupMapper">
+
+    <resultMap id="groupMap" type="com.ry.fu.followup.doctorbook.model.Group">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="project" column="name" jdbcType="VARCHAR"/>
+        <result property="descript" column="descript" jdbcType="VARCHAR"/>
+        <result property="diseaseId" column="disease_id" jdbcType="NUMERIC"/>
+        <result property="recordNo" column="record_no" jdbcType="NUMERIC"/>
+        <result property="review" column="review" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="express" column="express" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="createUser" column="create_user" jdbcType="NUMERIC"/>
+        <result property="updateUser" column="update_user" jdbcType="NUMERIC"/>
+        <result property="groupId" column="group_id" jdbcType="VARCHAR"/>
+        <result property="groupType" column="group_type" jdbcType="INTEGER"/>
+        <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
+        <result property="startTime" column="start_time" jdbcType="TIMESTAMP"/>
+        <result property="checkOpinion" column="check_opinion" jdbcType="VARCHAR"/>
+        <result property="manageType" column="manage_type" jdbcType="INTEGER"/>
+        <result property="processInstanceId" column="process_instance_id" jdbcType="VARCHAR"/>
+        <result property="taskId" column="taskId" jdbcType="VARCHAR"/>
+        <result property="currentLevel" column="currentLevel" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectGroup" resultMap="groupMap" parameterType="java.lang.Long">
+        SELECT
+          *
+        FROM fu_group WHERE 1=1
+        <if test="id != null">
+          AND id=#{id}
+        </if>
+        <if test="status != null">
+            AND status=#{status}
+        </if>
+        <if test="groupType != null">
+            AND group_type=#{groupType}
+        </if>
+    </select>
+
+    <select id="selectGroups" resultMap="groupMap" parameterType="java.lang.Long">
+        SELECT
+        *
+        FROM fu_group a WHERE 1=1
+        <if test="list != null and list.size() > 0">
+            AND ID IN
+            <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="status != null">
+            AND status=#{status}
+        </if>
+        <if test="groupType != null">
+            AND group_type=#{groupType}
+        </if>
+        order by a.approvertime DESC
+    </select>
+
+    <!--新版查找我的随访_count byTasher-->
+    <select id="selectDoctorGroupsCount" resultType="java.lang.Integer">
+        select count(g.id) as g_count
+        <if test="status == 1">
+            from act_ru_task t ,fu_group g where g.process_instance_id = t.proc_inst_id_ and g.status != 2
+            and t.task_def_key_ !='org_doctor' and g.create_user = #{doctorId}
+        </if>
+        <if test="status == 3">
+            from act_ru_task t ,fu_group g where g.process_instance_id = t.proc_inst_id_
+            and t.task_def_key_ ='org_doctor' and g.create_user = #{doctorId}
+        </if>
+        <if test="status == 2">
+            from fu_group g where g.status = #{status} and g.create_user = #{doctorId}
+        </if>
+    </select>
+
+    <!--新版查找我的随访byTasher-->
+    <select id="selectDoctorGroups" resultMap="groupMap" parameterType="java.lang.Long">
+        select * from (select g0.*,ROWNUM as RN from (select g.*
+        <if test="status == 1">
+            from act_ru_task t ,fu_group g where g.process_instance_id = t.proc_inst_id_ and g.status != 2
+            and t.task_def_key_ !='org_doctor' and g.create_user = #{doctorId}
+        </if>
+        <if test="status == 3">
+            from act_ru_task t ,fu_group g where g.process_instance_id = t.proc_inst_id_
+            and t.task_def_key_ ='org_doctor' and g.create_user = #{doctorId}
+        </if>
+        <if test="status == 2">
+            from fu_group g where g.status = #{status} and g.create_user = #{doctorId}
+        </if>
+        order by g.create_time desc) g0 where ROWNUM &lt;=#{end} ) g1 where g1.RN>=#{start}
+    </select>
+
+    <!--郑亿庆教授的查询所有-->
+    <select id="getGroupIdCountByDoctorIdAndStatus" resultType="java.lang.Integer">
+        <choose>
+            <when  test="userId !=10657">
+                select count(1) as totalRow from FU_GROUP_MEMBER a,FU_GROUP b where a.group_id = b.id
+                    and a.user_id=#{userId}
+                and b.status=#{status}
+            </when >
+            <otherwise>
+                select count(1) as totalRow from FU_GROUP where status=#{status}
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--郑亿庆教授的查询所有-->
+    <select id="queryGroupIdByDoctorIdAndStatusByPage" resultType="java.util.HashMap">
+        <choose>
+            <when test="userId!=10657">
+                SELECT * FROM
+                ( SELECT fgm.*, ROWNUM RN FROM
+                (select a.group_id as GROUP_ID from FU_GROUP_MEMBER a,FU_GROUP b where a.group_id = b.id
+                and a.user_id= #{userId}
+                and b.status = #{status} order by b.id DESC) fgm
+                WHERE ROWNUM &lt;= #{end} )
+                WHERE RN &gt;= #{start}
+            </when>
+            <otherwise>
+                SELECT * FROM
+                ( SELECT fgm.*, ROWNUM RN FROM
+                (select b.id as GROUP_ID from  FU_GROUP b
+                where b.status = #{status} order by b.id DESC) fgm
+                WHERE ROWNUM &lt;= #{end} )
+                WHERE RN &gt;= #{start}
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <!--郑亿庆教授的查询所有-->
+    <select id="getGroupIdCountByApplDoctorIdAndStatus" resultType="java.lang.Integer">
+        select count(*) as totalRow from FU_GROUP b
+        where b.status = #{status,jdbcType=INTEGER}
+        <if test="userId!=10657">
+            and b.CREATE_USER= #{userId,jdbcType=NUMERIC}
+        </if>
+    </select>
+
+    <!--郑亿庆教授的查询所有-->
+    <select id="queryApplGroupIdByDoctorIdAndStatusByPage" resultType="java.util.HashMap">
+        SELECT * FROM
+        ( SELECT fgm.*, ROWNUM RN FROM
+        (select b.ID as GROUP_ID from FU_GROUP b
+        where b.status = #{status}
+        <if test="userId!=10657">
+          and b.CREATE_USER= #{userId}
+        </if>
+        order by b.CREATE_TIME DESC) fgm
+        WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <select id="queryGroupIdByDoctorIdAndGroupTypeByPage" resultType="java.util.HashMap">
+        SELECT * FROM
+        ( SELECT fgm.*, ROWNUM RN FROM
+        (select a.group_id as GROUP_ID from FU_GROUP_MEMBER a,FU_GROUP b where a.group_id = b.id and a.user_id= #{userId} and b.group_type = #{groupType} order by b.CREATE_TIME DESC) fgm
+        WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <update id="updateConnected">
+        update fu_questionnaire a set a.connected = '1' where a.id in(
+          select fq.id from fu_questionnaire fq,fu_group_record fgr,fu_group fg,fu_record fr,fu_patient fp
+              where fq.group_record_id = fgr.id
+              and fgr.group_id = fg.id
+              and fgr.record_id = fr.id
+              and fr.patient_id = fp.id
+              and fg.id = #{groupId}
+              and fp.id = #{patientId})
+    </update>
+
+
+    <select id="queryDoctoryContactById" resultType="java.util.HashMap" parameterType="java.lang.Long">
+
+    SELECT newtab.*,ffi.START_FOLLOW_TIME,ffi.description as "nextFlowInstanceDsc",ffi.id as "nextFlowInstanceId"
+        FROM
+          (SELECT
+            fg.id as "projectId",
+            fg.name AS "project",
+
+            fr.PATIENT_ID AS "patienId",
+            fr.HOSP_NO    AS "hospNo",
+            fp.NAME AS "patientName",
+            fp.PHONE AS "phone",
+            fq.id
+          FROM FU_GROUP_MEMBER fgm,
+            fu_group fg,
+            FU_RECORD fr,
+            FU_PATIENT fp,
+            FU_GROUP_RECORD fgr
+          LEFT JOIN FU_QUESTIONNAIRE fq
+          ON fq.GROUP_RECORD_ID= fgr.id
+          WHERE fgm.group_id   =fg.id
+          AND fg.id            = fgr.GROUP_ID
+          AND fr.id            = fgr.RECORD_ID
+          AND fp.id            =fr.PATIENT_ID
+          AND fgm.USER_ID      =#{userId}
+          ) newtab
+        LEFT JOIN FU_FLOW_INSTANCE ffi
+        ON newtab.id               =ffi.QUES_ID
+        AND ffi.START_FOLLOW_TIME IN
+          (SELECT MAX(START_FOLLOW_TIME)
+          FROM FU_FLOW_INSTANCE
+          WHERE ffi.QUES_ID=FU_FLOW_INSTANCE.QUES_ID
+          )
+
+    </select>
+
+
+    <select id="countPatientsByProjectId" resultType="java.util.HashMap">
+               SELECT count(fg.id) as "patientTotal" ,fg.id as "projectId"
+                  FROM FU_GROUP_MEMBER fgm,
+                  fu_group fg,
+                FU_RECORD fr,
+                  FU_PATIENT fp,
+                  FU_GROUP_RECORD fgr left join FU_QUESTIONNAIRE fq  on fq.GROUP_RECORD_ID= fgr.id
+                  WHERE fgm.group_id=fg.id
+                AND fg.id         = fgr.GROUP_ID
+                and fr.id         = fgr.RECORD_ID
+                and fp.id         =fr.PATIENT_ID
+                AND fgm.USER_ID   =#{userId}
+                GROUP BY fg.id
+    </select>
+
+    <!--待审核总数-->
+    <select id="queryCountTask" resultType="java.lang.Integer">
+        select count(1) from (
+            Select fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid  ,fg.Id,fg.Name ,fg.Create_Time,fg.Group_Type,fg.Group_Id,fg.Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id ,fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num
+                 From fu_group fg, act_ru_task act, pwp_account pac
+                 Where  (fg.status = 1 or fg.status = 8) and  fg.process_instance_id = act.proc_inst_id_  And  act.task_def_key_ = 'org_head_examine'  And  pac.account_id = fg.create_user  And  pac.org_id In
+                 ( Select hp.org_id From hpb_account_org_auth hp, pwp_role pr , pwp_accountrole pa Where pr.role_id = pa.role_id And pr.role_name = '科室主任' And hp.account_id = pa.account_id and pa.account_id =  #{userId}
+                     ) union all
+                 Select  fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid ,fg.Id,fg.Name,fg.Create_Time,fg.Group_Type,fg.Group_Id,fg.Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id , fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num From
+                 (Select Id,manage_type,Name,Create_Time,Group_Type,Group_Id,Status,Record_No,Create_User,Process_Instance_Id,
+                 (Case Manage_Type When '0' Then '随访管理（临床中心）' When '1' Then '随访管理（GCP）' Else '随访管理（随访中心）' End) Role_Name From Fu_Group) Fg,
+                 act_ru_task act,pwp_account pac,Pwp_Role Pr,Pwp_Accountrole Pa
+                 Where (fg.status = 1 or fg.status = 8) and fg.process_instance_id = act.proc_inst_id_ And act.task_def_key_ in ('fu_manage_lczx','fu_manage_GCP','fu_manage_sfzx') And fg.create_user = pac.account_id And pr.role_id = pa.role_id And pr.role_name = fg.Role_Name
+                 And pa.account_id = #{userId}
+                     union all
+                 Select  fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid ,fg.Id,fg.Name,fg.Create_Time,fg.Group_Type,fg.Group_Id,fg.Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id , fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num From
+                 (Select Id,manage_type,Name,Create_Time,Group_Type,Group_Id,Status,Record_No,Create_User,Process_Instance_Id,
+                 (Case Manage_Type When '0' Then '随访管理（临床中心管理者）' When '1' Then '随访管理（GCP管理者）' Else '随访管理（随访中心管理者）' End) Role_Name From Fu_Group) Fg,
+                 act_ru_task act,pwp_account pac,Pwp_Role Pr,Pwp_Accountrole Pa
+                 Where (fg.status = 1 or fg.status = 8) and fg.process_instance_id = act.proc_inst_id_ And act.task_def_key_ in('fu_manage_lczx_leader','fu_manage_GCP_leader','fu_manage_sfzx_leader') And fg.create_user = pac.account_id And pr.role_id = pa.role_id And pr.role_name = fg.Role_Name
+                 And pa.account_id = #{userId}
+             ) g
+            <if test="userId != 1 and  userId != 3">
+                where g.Create_User !=3
+            </if>
+    </select>
+
+    <!--待审核列表-->
+    <select id="queryGroupTask" resultMap="groupMap" parameterType="java.lang.Long">
+      SELECT * FROM
+        ( SELECT fg.*, ROWNUM RN FROM (select * from
+        (Select fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid  ,fg.Id,fg.Name ,fg.Create_Time,fg.Group_Type,fg.Group_Id,1 as Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id ,fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num
+                 From fu_group fg, act_ru_task act, pwp_account pac
+                 Where  (fg.status = 1 or fg.status = 8) and  fg.process_instance_id = act.proc_inst_id_  And  act.task_def_key_ = 'org_head_examine'  And  pac.account_id = fg.create_user  And  pac.org_id In
+                 ( Select hp.org_id From hpb_account_org_auth hp, pwp_role pr , pwp_accountrole pa Where pr.role_id = pa.role_id And pr.role_name = '科室主任' And hp.account_id = pa.account_id and pa.account_id =  #{userId}
+                     )
+                <if test="userId != 1 and  userId != 3">
+                    and fg.Create_User !=3
+                </if>
+                  union all
+                 Select  fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid ,fg.Id,fg.Name,fg.Create_Time,fg.Group_Type,fg.Group_Id,1 as Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id , fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num From
+                 (Select Id,manage_type,Name,Create_Time,Group_Type,Group_Id,Status,Record_No,Create_User,Process_Instance_Id,
+                 (Case Manage_Type When '0' Then '随访管理（临床中心）' When '1' Then '随访管理（GCP）' Else '随访管理（随访中心）' End) Role_Name From Fu_Group) Fg,
+                 act_ru_task act,pwp_account pac,Pwp_Role Pr,Pwp_Accountrole Pa
+                 Where (fg.status = 1 or fg.status = 8) and fg.process_instance_id = act.proc_inst_id_ And act.task_def_key_ in ('fu_manage_lczx','fu_manage_GCP','fu_manage_sfzx') And fg.create_user = pac.account_id And pr.role_id = pa.role_id And pr.role_name = fg.Role_Name
+                <if test="userId != 1 and  userId != 3">
+                    and fg.Create_User!=3
+                </if>
+                 And pa.account_id = #{userId}
+                     union all
+                 Select  fg.manage_type,act.task_def_key_ as currentlevel,act.id_ As taskid ,fg.Id,fg.Name,fg.Create_Time,fg.Group_Type,fg.Group_Id,1 as Status,fg.Record_No,pac.account_name,fg.Process_Instance_Id , fg.create_user,
+                 (SELECT b.org_name FROM pwp_account a,pwp_org b where fg.create_user = a.account_id and a.org_id = b.org_id) as acc_org_name,
+                 (select count(id) from FU_GROUP_RECORD fgr where fgr.group_id = fg.id and fgr.status =1) as record_num From
+                 (Select Id,manage_type,Name,Create_Time,Group_Type,Group_Id,Status,Record_No,Create_User,Process_Instance_Id,
+                 (Case Manage_Type When '0' Then '随访管理（临床中心管理者）' When '1' Then '随访管理（GCP管理者）' Else '随访管理（随访中心管理者）' End) Role_Name From Fu_Group) Fg,
+                 act_ru_task act,pwp_account pac,Pwp_Role Pr,Pwp_Accountrole Pa
+                 Where (fg.status = 1 or fg.status = 8) and fg.process_instance_id = act.proc_inst_id_ And act.task_def_key_ in('fu_manage_lczx_leader','fu_manage_GCP_leader','fu_manage_sfzx_leader') And fg.create_user = pac.account_id And pr.role_id = pa.role_id And pr.role_name = fg.Role_Name
+                  And pa.account_id = #{userId}
+                    <if test="userId != 1 and  userId != 3">
+                    and fg.create_user!=3
+                    </if>
+                    )
+                   order by create_time desc ) fg
+                 WHERE ROWNUM &lt;= #{end})
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <!--通过任务总数-->
+    <select id="queryCountPassTask" resultType="java.lang.Integer">
+        select count(1) as check_already_archiving from  (select distinct(id) from (Select fg.id ,fg.create_user
+        From fu_group fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ = 'org_head_examine'
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and fg.process_instance_id = act.proc_inst_id_
+        And act.delete_reason_ = 'completed'
+        And pac.account_id = fg.create_user
+        and pac.org_id In
+        (Select hp.org_id
+        From hpb_account_org_auth hp, pwp_role pr, pwp_accountrole pa
+        Where pr.role_id = pa.role_id
+        And pr.role_name = '科室主任'
+        And hp.account_id = pa.account_id
+        and pa.account_id = #{userId})
+
+        union all
+
+        Select fg.id,fg.Create_User
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心）'
+        When '1' Then
+        '随访管理（GCP）'
+        Else
+        '随访管理（随访中心）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In
+        (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx', 'fu_manage_GCP', 'fu_manage_sfzx')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and act.delete_reason_ = 'completed'
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        And pa.account_id = #{userId}
+
+        union all
+        Select fg.id,fg.Create_User
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心管理者）'
+        When '1' Then
+        '随访管理（GCP管理者）'
+        Else
+        '随访管理（随访中心管理者）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx_leader',
+        'fu_manage_GCP_leader',
+        'fu_manage_sfzx_leader')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa
+        Where  fg.status = '2'
+        and act.delete_reason_ = 'completed'
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        And pa.account_id = #{userId}) aa
+        <if test="userId != 1 and  userId != 3">
+            where aa.Create_User !=3
+        </if>
+        )
+    </select>
+
+    <!--通过列表-->
+    <select id="queryPassGroupTask" resultMap="groupMap" parameterType="java.lang.Long">
+        SELECT * FROM
+        ( SELECT fg.*, ROWNUM RN FROM (
+        select          id,
+                        manage_type,
+                        currentlevel,
+                        max(taskid) as taskid,
+                        name,
+                        Create_Time,
+                        Group_Type,
+                        Group_Id,
+                        2 as Status,
+                        Record_No,
+                        account_name,
+                        Process_Instance_Id,
+                        create_user,
+                        acc_org_name,
+                        record_num
+                from (Select fg.manage_type,
+                null as currentlevel,
+                act.id_ As taskid,
+                fg.Id,
+                fg.Name,
+                fg.Create_Time,
+                fg.Group_Type,
+                fg.create_user,
+                fg.Group_Id,
+                fg.Status,
+                fg.Record_No,
+                pac.account_name,
+                fg.Process_Instance_Id,
+                (SELECT b.org_name
+                FROM pwp_account a, pwp_org b
+                where fg.create_user = a.account_id
+                and a.org_id = b.org_id) as acc_org_name,
+                (select count(id)
+                from FU_GROUP_RECORD fgr
+                where fgr.group_id = fg.id
+                and fgr.status = 1) as record_num
+                From fu_group fg,
+                (Select *
+                From act_hi_taskinst
+                Where id_ In (select max(p.id_)
+                from act_hi_taskinst p
+                Where p.task_def_key_ = 'org_head_examine'
+                Group By p.proc_inst_id_)) act,
+                pwp_account pac,
+                act_ru_task art
+                Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+                and fg.process_instance_id = act.proc_inst_id_
+                And act.delete_reason_ = 'completed'
+                And pac.account_id = fg.create_user
+                and pac.org_id In
+                (Select hp.org_id
+                From hpb_account_org_auth hp, pwp_role pr, pwp_accountrole pa
+                Where pr.role_id = pa.role_id
+                And pr.role_name = '科室主任'
+                And hp.account_id = pa.account_id
+                and pa.account_id = #{userId})
+
+                union all
+
+                Select fg.manage_type,
+                null as currentlevel,
+                act.id_ As taskid,
+                fg.Id,
+                fg.Name,
+                fg.Create_Time,
+                fg.Group_Type,
+                fg.create_user,
+                fg.Group_Id,
+                fg.Status,
+                fg.Record_No,
+                pac.account_name,
+                fg.Process_Instance_Id,
+                (SELECT b.org_name
+                FROM pwp_account a, pwp_org b
+                where fg.create_user = a.account_id
+                and a.org_id = b.org_id) as acc_org_name,
+                (select count(id)
+                from FU_GROUP_RECORD fgr
+                where fgr.group_id = fg.id
+                and fgr.status = 1) as record_num
+                From (Select Id,
+                manage_type,
+                Name,
+                Create_Time,
+                Group_Type,
+                Group_Id,
+                Status,
+                Record_No,
+                Create_User,
+                Process_Instance_Id,
+                (Case Manage_Type
+                When '0' Then
+                '随访管理（临床中心）'
+                When '1' Then
+                '随访管理（GCP）'
+                Else
+                '随访管理（随访中心）'
+                End) Role_Name
+                From Fu_Group) Fg,
+                (Select *
+                From act_hi_taskinst
+                Where id_ In
+                (select max(p.id_)
+                from act_hi_taskinst p
+                Where p.task_def_key_ In
+                ('fu_manage_lczx', 'fu_manage_GCP', 'fu_manage_sfzx')
+                Group By p.proc_inst_id_)) act,
+                pwp_account pac,
+                Pwp_Role Pr,
+                Pwp_Accountrole Pa,
+                act_ru_task art
+                Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+                and act.delete_reason_ = 'completed'
+                and fg.process_instance_id = act.proc_inst_id_
+                And fg.create_user = pac.account_id
+                And pr.role_id = pa.role_id
+                And pr.role_name = fg.Role_Name
+                And pa.account_id = #{userId}
+
+                union all
+
+                Select fg.manage_type,
+                null as currentlevel,
+                act.id_ As taskid,
+                fg.Id,
+                fg.Name,
+                fg.Create_Time,
+                fg.Group_Type,
+                fg.create_user,
+                fg.Group_Id,
+                fg.Status,
+                fg.Record_No,
+                pac.account_name,
+                fg.Process_Instance_Id,
+                (SELECT b.org_name
+                FROM pwp_account a, pwp_org b
+                where fg.create_user = a.account_id
+                and a.org_id = b.org_id) as acc_org_name,
+                (select count(id)
+                from FU_GROUP_RECORD fgr
+                where fgr.group_id = fg.id
+                and fgr.status = 1) as record_num
+                From (Select Id,
+                manage_type,
+                Name,
+                Create_Time,
+                Group_Type,
+                Group_Id,
+                Status,
+                Record_No,
+                Create_User,
+                Process_Instance_Id,
+                (Case Manage_Type
+                When '0' Then
+                '随访管理（临床中心管理者）'
+                When '1' Then
+                '随访管理（GCP管理者）'
+                Else
+                '随访管理（随访中心管理者）'
+                End) Role_Name
+                From Fu_Group) Fg,
+                (Select *
+                From act_hi_taskinst
+                Where id_ In (select max(p.id_)
+                from act_hi_taskinst p
+                Where p.task_def_key_ In
+                ('fu_manage_lczx_leader',
+                'fu_manage_GCP_leader',
+                'fu_manage_sfzx_leader')
+                Group By p.proc_inst_id_)) act,
+                pwp_account pac,
+                Pwp_Role Pr,
+                Pwp_Accountrole Pa
+                Where  fg.status = '2'
+                and act.delete_reason_ = 'completed'
+                and fg.process_instance_id = act.proc_inst_id_
+                And fg.create_user = pac.account_id
+                And pr.role_id = pa.role_id
+                And pr.role_name = fg.Role_Name
+                And pa.account_id = #{userId})
+                <if test="userId != 1 and  userId != 3">
+                  where create_User !=3
+                </if>
+                group by id,
+                    manage_type,
+                    currentlevel,
+                    name,
+                    Create_Time,
+                    Group_Type,
+                    Group_Id,
+                    Status,
+                    Record_No,
+                    account_name,
+                    Process_Instance_Id,
+                    create_user,
+                    acc_org_name,
+                    record_num order by create_time desc ) fg
+                 WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+    <!--驳回总数-->
+    <select id="queryCountNotPassTask" resultType="java.lang.Integer">
+        select count(1) as check_already_archiving from  (select distinct(id) from (Select fg.id,fg.create_user
+        From fu_group fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ = 'org_head_examine'
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and fg.process_instance_id = act.proc_inst_id_
+        And act.delete_reason_ Is Not Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        and act.delete_reason_ Is Not Null
+        and act.task_def_key_ = 'org_head_examine'
+        And pac.account_id = fg.create_user
+        And pac.org_id In
+        (Select hp.org_id
+        From hpb_account_org_auth hp, pwp_role pr, pwp_accountrole pa
+        Where pr.role_id = pa.role_id
+        And pr.role_name = '科室主任'
+        And hp.account_id = pa.account_id
+        and pa.account_id = #{userId}
+
+        )
+        union all
+        Select fg.id,fg.create_user
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心）'
+        When '1' Then
+        '随访管理（GCP）'
+        Else
+        '随访管理（随访中心）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In
+        (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx', 'fu_manage_GCP', 'fu_manage_sfzx')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and act.claim_time_ Is Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        And act.delete_reason_ Is Not Null
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        And pa.account_id = #{userId}
+
+        union all
+        Select fg.id,fg.create_user
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心管理者）'
+        When '1' Then
+        '随访管理（GCP管理者）'
+        Else
+        '随访管理（随访中心管理者）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx_leader',
+        'fu_manage_GCP_leader',
+        'fu_manage_sfzx_leader')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and act.claim_time_ Is Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        And act.delete_reason_ Is Not Null
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        and pa.account_id = #{userId}) aa
+        <if test="userId != 1 and  userId != 3">
+            where aa.Create_User !=3
+        </if>
+        )
+    </select>
+
+    <!--驳回列表-->
+    <select id="queryNotPassGroupTask" resultMap="groupMap" parameterType="java.lang.Long">
+         SELECT * FROM
+        ( SELECT fg.*, ROWNUM RN FROM (
+        select          id,
+                        manage_type,
+                        currentlevel,
+                        max(taskid) as taskid,
+                        name,
+                        Create_Time,
+                        Group_Type,
+                        Group_Id,
+                        3 as Status,
+                        Record_No,
+                        account_name,
+                        Process_Instance_Id,
+                        create_user,
+                        acc_org_name,
+                        record_num
+          from ( Select fg.manage_type,
+        null as currentlevel,
+        act.id_ As taskid,
+        fg.Id,
+        fg.Name,
+        fg.Create_Time,
+        fg.Group_Type,
+        fg.create_user,
+        fg.Group_Id,
+        fg.Status,
+        fg.Record_No,
+        pac.account_name,
+        fg.Process_Instance_Id,
+        (SELECT b.org_name
+        FROM pwp_account a, pwp_org b
+        where fg.create_user = a.account_id
+        and a.org_id = b.org_id) as acc_org_name,
+        (select count(id)
+        from FU_GROUP_RECORD fgr
+        where fgr.group_id = fg.id
+        and fgr.status = 1) as record_num
+        From fu_group fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ = 'org_head_examine'
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and fg.process_instance_id = act.proc_inst_id_
+        And act.delete_reason_ Is Not Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        and act.delete_reason_ Is Not Null
+        and act.task_def_key_ = 'org_head_examine'
+        And pac.account_id = fg.create_user
+        And pac.org_id In
+        (Select hp.org_id
+        From hpb_account_org_auth hp, pwp_role pr, pwp_accountrole pa
+        Where pr.role_id = pa.role_id
+        And pr.role_name = '科室主任'
+        And hp.account_id = pa.account_id
+        and pa.account_id = #{userId})
+        <if test="userId != 1 and  userId != 3">
+            and fg.Create_User !=3
+        </if>
+        union all
+        Select fg.manage_type,
+        null as currentlevel,
+        act.id_ As taskid,
+        fg.Id,
+        fg.Name,
+        fg.Create_Time,
+        fg.Group_Type,
+        fg.create_user,
+        fg.Group_Id,
+        fg.Status,
+        fg.Record_No,
+        pac.account_name,
+        fg.Process_Instance_Id,
+        (SELECT b.org_name
+        FROM pwp_account a, pwp_org b
+        where fg.create_user = a.account_id
+        and a.org_id = b.org_id) as acc_org_name,
+        (select count(id)
+        from FU_GROUP_RECORD fgr
+        where fgr.group_id = fg.id
+        and fgr.status = 1) as record_num
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心）'
+        When '1' Then
+        '随访管理（GCP）'
+        Else
+        '随访管理（随访中心）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In
+        (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx', 'fu_manage_GCP', 'fu_manage_sfzx')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and act.claim_time_ Is Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        And act.delete_reason_ Is Not Null
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        And pa.account_id = #{userId}
+        <if test="userId != 1 and  userId != 3">
+            and fg.Create_User !=3
+        </if>
+        union all
+        Select fg.manage_type,
+        null as currentlevel,
+        act.id_ As taskid,
+        fg.Id,
+        fg.Name,
+        fg.Create_Time,
+        fg.Group_Type,
+        fg.create_user,
+        fg.Group_Id,
+        fg.Status,
+        fg.Record_No,
+        pac.account_name,
+        fg.Process_Instance_Id,
+        (SELECT b.org_name
+        FROM pwp_account a, pwp_org b
+        where fg.create_user = a.account_id
+        and a.org_id = b.org_id) as acc_org_name,
+        (select count(id)
+        from FU_GROUP_RECORD fgr
+        where fgr.group_id = fg.id
+        and fgr.status = 1) as record_num
+        From (Select Id,
+        manage_type,
+        Name,
+        Create_Time,
+        Group_Type,
+        Group_Id,
+        Status,
+        Record_No,
+        Create_User,
+        Process_Instance_Id,
+        (Case Manage_Type
+        When '0' Then
+        '随访管理（临床中心管理者）'
+        When '1' Then
+        '随访管理（GCP管理者）'
+        Else
+        '随访管理（随访中心管理者）'
+        End) Role_Name
+        From Fu_Group) Fg,
+        (Select *
+        From act_hi_taskinst
+        Where id_ In (select max(p.id_)
+        from act_hi_taskinst p
+        Where p.task_def_key_ In
+        ('fu_manage_lczx_leader',
+        'fu_manage_GCP_leader',
+        'fu_manage_sfzx_leader')
+        Group By p.proc_inst_id_)) act,
+        pwp_account pac,
+        Pwp_Role Pr,
+        Pwp_Accountrole Pa,
+        act_ru_task art
+        Where (Act.Proc_Inst_Id_ = Art.Proc_Inst_Id_ And Act.Task_Def_Key_ != Art.Task_Def_Key_ Or( fg.status=2 ))
+        and act.claim_time_ Is Null
+        And act.delete_reason_ Not In ('delegated', 'completed', 'deleted')
+        And act.delete_reason_ Is Not Null
+        and fg.process_instance_id = act.proc_inst_id_
+        And fg.create_user = pac.account_id
+        And pr.role_id = pa.role_id
+        And pr.role_name = fg.Role_Name
+        and pa.account_id = #{userId}
+        <if test="userId != 1 and  userId != 3">
+            and fg.Create_User !=3
+        </if>
+        )
+                group by id,
+                    manage_type,
+                    currentlevel,
+                    name,
+                    Create_Time,
+                    Group_Type,
+                    Group_Id,
+                    Status,
+                    Record_No,
+                    account_name,
+                    Process_Instance_Id,
+                    create_user,
+                    acc_org_name,
+                    record_num order by create_time desc ) fg
+                 WHERE ROWNUM &lt;= #{end} )
+        WHERE RN &gt;= #{start}
+    </select>
+
+
+
+</mapper>

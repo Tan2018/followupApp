@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.esb.medicaljournal.mapper.DoctorMapper">
+    <resultMap id="DoctorResult" type="com.ry.fu.esb.medicaljournal.model.DoctorInfo">
+        <id property="id" column="id"/>
+        <result property="chName" column="ch_name"/>
+    </resultMap>
+    <insert id="saveOrUpdate" >
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            SELECT COUNT(*) FROM M_DOCTOR WHERE DOCTOR_ID = #{doctorId}
+        </selectKey>
+        <if test="count > 0">
+            UPDATE M_DOCTOR
+            SET ORG_ID = #{orgId},ORG_NAME = #{orgName},SEX = #{sex},HEAD_IMG = #{headImg},USER_NAME = #{userName},
+            GOOD_AT = #{goodAt},PROFESS_NAME = #{processName},CH_NAME = #{chName},STATUS = #{status}
+            WHERE DOCTOR_ID = #{doctorId}
+        </if>
+        <if test="count==0">
+            INSERT INTO M_DOCTOR(ID,ORG_ID,SEX,PROFESS_NAME,CH_NAME,USER_NAME,STATUS,GOOD_AT,HEAD_IMG,ORG_NAME,DOCTOR_ID)
+            VALUES(#{id},#{orgId},#{sex},#{processName},#{chName},#{userName},
+            #{status},#{goodAt},#{headImg},#{orgName},#{doctorId})
+        </if>
+    </insert>
+
+    <insert id="saveNoRepeat" >
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            SELECT COUNT(*) FROM M_DOCTOR WHERE DOCTOR_ID = #{doctorId}
+        </selectKey>
+        <if test="count==0">
+            INSERT INTO M_DOCTOR VALUES(#{id},#{orgId},#{sex},#{processName},#{chName},#{userName},
+            #{status},#{goodAt},#{headImg},#{orgName},#{doctorId})
+        </if>
+    </insert>
+
+    <select id="selectAppointDoctorInfo" resultMap="DoctorResult">
+        select doctor_id,ch_name from m_doctor where doctor_id in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+               #{item}
+        </foreach>
+    </select>
+
+</mapper>

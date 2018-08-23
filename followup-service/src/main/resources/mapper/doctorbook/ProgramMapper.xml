@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.ProgramMapper">
+
+    <resultMap id="ProgramAndFlowStatus" type="com.ry.fu.followup.doctorbook.model.Program">
+        <id property="id" column="id" jdbcType="NUMERIC"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="flowStatus" column="status" jdbcType="INTEGER"/>
+        <result property="pdfPath" column="PDF_PATH" jdbcType="VARCHAR"/>
+        <association property="report" javaType="com.ry.fu.followup.doctorbook.model.Report">
+            <id property="id" column="id" jdbcType="NUMERIC"/>
+            <result property="templateVerId" column="template_ver_id" jdbcType="NUMERIC"/>
+            <result property="reportStatus" column="reportStatus" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="createUser" column="create_user" jdbcType="NUMERIC"/>
+            <result property="lastupdateUser" column="lastupdate_user" jdbcType="NUMERIC"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="lastupdateTime" column="lastupdate_time" jdbcType="TIMESTAMP"/>
+            <result property="synVersion" column="syn_version" jdbcType="NUMERIC"/>
+        </association>
+
+
+
+    </resultMap>
+
+    <select id="queryProgramIdsByGroupId" resultType="com.ry.fu.followup.doctorbook.model.Program">
+        select distinct id from (
+        select fp.id as id from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_QUESTIONNAIRE fq, FU_FLOW_INSTANCE ffi, FU_FOLLOW_PROGRAM_INSTANCE ffpi, FU_PROGRAM fp
+        where fg.id = fgr.group_id and fgr.id = fq.group_record_id and fq.id = ffi.ques_id and ffi.id = ffpi.flow_id and ffpi.program_id = fp.id
+        and fg.id = #{groupId}
+        )
+    </select>
+
+    <!--<select id="" resultTycom.ry.fu.followupucer.doctorbook.model.Program">-->
+        <!--select fg.id as groupId, fp.name as flowName, ffi.start_follow_time as startTime, fp.id as programId from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_QUESTIONNAIRE fq, FU_FLOW_INSTANCE ffi, FU_FOLLOW_PROGRAM_INSTANCE ffpi, FU_PROGRAM fp-->
+        <!--where fg.id = fgr.group_id and fgr.id = fq.group_record_id and fq.id = ffi.ques_id and ffi.id = ffpi.flow_id and ffpi.program_id = fp.id-->
+        <!--and fg.id = #{groupId} and fp.id = #{programId}-->
+    <!--</select>-->
+
+    <select id="queryProgramDetailByGroupId" resultType="java.util.HashMap">
+        select fp.name as "flowName", ffi.start_follow_time as "startTime", fp.id as "programId" from FU_GROUP fg, FU_GROUP_RECORD fgr, FU_QUESTIONNAIRE fq, FU_FLOW_INSTANCE ffi, FU_FOLLOW_PROGRAM_INSTANCE ffpi, FU_PROGRAM fp
+        where fg.id = fgr.group_id and fgr.id = fq.group_record_id and fq.id = ffi.ques_id and ffi.id = ffpi.flow_id and ffpi.program_id = fp.id
+        and fg.id = #{groupId}
+    </select>
+
+    <select id="queryProgramDetailByPlanId" resultType="java.util.HashMap">
+        select
+            fp.plan_name as "planName",
+            fp.id as "planId",
+            fpr.name as "programName",
+            fpf.DESCRIBE as "describe",
+            fpr.id as "programId",
+            ffp.flow_id
+        from FU_GROUP         fg,
+            FU_PLAN           fp,
+            FU_PLAN_FLOW      fpf,
+            FU_FOLLOW_PROGRAM ffp,
+            FU_PROGRAM        fpr
+        where fg.id = fp.bus_id
+            and fp.bus_type=1
+            and fpf.plan_id = fp.id
+            and ffp.flow_id(+) = fpf.follow_id
+            and ffp.program_id(+) = fpr.id
+            and fpr.group_id = fg.id
+            and fp.id = #{planId}
+        order by fpr.sort asc ,fpf.time asc
+    </select>
+
+    <select id="queryProgramByFlowId" resultMap="ProgramAndFlowStatus">
+           select ttr.content,fp.id ,fp.name ,ffpi.status,fp.pdf_path
+           from fu_program fp, fu_follow_program_instance ffpi, fu_flow_instance ffi,tp_template_report ttr
+            where ffpi.program_id=fp.id
+            and ffpi.flow_id=ffi.id
+            and ffpi.report_id = ttr.id
+            and ffpi.flow_id=#{flowInstanceId}
+            order by ffi.start_follow_time
+    </select>
+
+    <select id="queryProgramDatasByGroupId" resultType="java.util.HashMap">
+
+        select fp.id as "program_id", tt.content as "content" from  FU_PROGRAM fp ,tp_template tt
+        where fp.template_ver_id = tt.template_ver_id and  fp.status=0 and fp.group_id = #{groupId}
+        order by fp.sort asc
+
+
+    </select>
+
+</mapper>

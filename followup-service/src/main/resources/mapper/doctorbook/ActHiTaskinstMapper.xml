@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.followup.doctorbook.mapper.ActHiTaskinstMapper">
+    <resultMap id="actHiTaskinstMap" type="com.ry.fu.followup.doctorbook.model.ActHiTaskinst">
+        <id column="id_" property="id_" />
+        <result column="name_" property="name_" />
+        <result column="assignee_" property="assignee_" />
+        <result column="proc_inst_id_" property="proc_inst_id_" />
+        <result column="end_time_" property="end_time_" />
+        <result column="start_time_" property="start_time_" />
+        <result column="description_" property="description_" />
+        <result column="delete_reason_" property="delete_reason_" />
+    </resultMap>
+    <select id="queryActHiTaskinstByInstid" resultMap="actHiTaskinstMap">
+        SELECT * FROM
+        ( SELECT a.*, ROWNUM RN FROM
+        (select t.id_ ,t.proc_inst_id_,t.name_,(select account_name from pwp_account where account_code =t.assignee_)as assignee_,
+        to_char(t.start_time_,'yyyy-MM-dd HH24:mi:ss') as start_time_,to_char(t.end_time_,'yyyy-MM-dd HH24:mi:ss') as end_time_, t.delete_reason_ ,t2.message_ as description_
+        from act_hi_taskinst t left  join act_hi_comment t2 on t.id_ = t2.task_id_ and t2.proc_inst_id_ =#{proc_inst_id_}
+        and t2.action_ ='AddComment' where t.proc_inst_id_ = #{proc_inst_id_} and t.task_def_key_ !='org_doctor' order by t.start_time_ desc) a
+        WHERE ROWNUM &lt;=#{end})
+        WHERE RN &gt;=#{start}
+    </select>
+
+    <select id="getActHiTaskinstctCountByInstId" resultType="java.lang.Integer">
+      select count(t.id_) as ActHiTaskinstctNum from act_hi_taskinst t where t.proc_inst_id_ = #{proc_inst_id_}
+    </select>
+</mapper>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>支付页面</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- 引入 Bootstrap
+	<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	 -->
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css">
+	<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap-theme.css">
+	<script src="bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+	<script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+
+
+	<script>
+		var prePay = "http://localhost:2017/esb/followupApp/v1/medicalJournal/pay/preCashierPay";
+		$(function() {
+			//发起预支付申请
+			var reqData = {};
+			$("#preBtn").on('click', function() {
+				reqData.outOrderNo = $('#outOrderNo').val();
+				reqData.channelCode = $('#channelCode').val();
+				reqData.subject = $('#subject').val();
+				reqData.outOrderNo = $('#outOrderNo').val();
+				reqData.returnUrl = $('#returnUrl').val();
+				reqData.notifyUrl = $('#notifyUrl').val();
+				reqData.tradeTotalFee = $('#tradeTotalFee').val();
+				console.log(reqData);
+				$.ajax({
+					type : "POST",
+					dataType : "json",
+					url : prePay,
+					contentType : "application/json",
+					data : JSON.stringify(reqData),
+					success: function (result) {
+						console.log(result);//打印服务端返回的数据(调试用)
+						if(result.status == '200' || result.status == 200) {
+							//成功
+							$('#form2 [name=appId]').val(result.data.appId);
+							$('#form2 [name=merchantNo]').val(result.data.merchantNo);
+							$('#form2 [name=cashierId]').val(result.data.cashierId);
+							$('#form2 [name=nonceStr]').val(result.data.nonceStr);
+							$('#form2 [name=timeStamp]').val(result.data.timeStamp);
+							$('#form2 [name=signMode]').val(result.data.signMode);
+							$('#form2 [name=sign]').val(result.data.sign);
+							$('#form2').attr('action', result.data.cashierUrl);
+						} else {
+							//失败
+							console.log('失败');
+						}
+					},
+					error : function(error) {
+						console.log(error);
+					}
+				});
+			});
+		});
+	</script>
+</head>
+<body>
+	<div class="container">
+		<form role="form" id="prePayForm" method="post" >
+			<div class="form-group">
+				<label for="subject">subject</label>
+				<input type="text" class="form-control" id="subject" value="挂号费-测试人员" placeholder="请输入subject">
+			</div>	
+			<div class="form-group">
+				<label for="outOrderNo">outOrderNo</label>
+				<input type="text" class="form-control" id="outOrderNo" value="test001" placeholder="请输入outOrderNo">
+			</div>
+			<div class="form-group">
+				<label for="outOrderNo">tradeTotalFee</label>
+				<input type="text" class="form-control" id="tradeTotalFee" value="1000" placeholder="请输入tradeTotalFee">
+			</div>
+			<div class="form-group">
+				<label for="returnUrl">returnUrl</label>
+				<input type="text" class="form-control" id="returnUrl" value="http://localhost:2017/esb/success.html" placeholder="请输入returnUrl">
+			</div>
+			<button type="button" id="preBtn" class="btn btn-default">预支付申请</button>
+		</form>
+		<form role="form" id="form2" action="http://ysccashier.968309.net/trade/cashierCenter" method="post" >
+			<div class="form-group">
+				<label for="appId">appId</label>
+				<input type="text" class="form-control" name="appId" value="" placeholder="请输入appId">
+			</div>
+			<div class="form-group">
+				<label for="merchantNo">merchantNo</label>
+				<input type="text" class="form-control" name="merchantNo" value="9683094539159523" placeholder="请输入merchantNo" >
+			</div>
+			<div class="form-group">
+				<label for="cashierId">cashierId</label>
+				<input type="text" class="form-control" name="cashierId" value="" placeholder="请输入cashierId">
+			</div>
+			<div class="form-group">
+				<label for="nonceStr">nonceStr</label>
+				<input type="text" class="form-control" name="nonceStr" value="" placeholder="请输入nonceStr">
+			</div>
+			<div class="form-group">
+				<label for="timeStamp">timeStamp</label>
+				<input type="text" class="form-control" name="timeStamp" value="" placeholder="请输入timeStamp，格式为yyy-MM-dd HH:mm:ss">
+			</div>
+			<div class="form-group">
+				<label for="signMode">signMode</label>
+				<input type="text" class="form-control" name="signMode" value="RSA" >
+			</div>
+			<div class="form-group">
+				<label for="sign">sign</label>
+				<input type="text" class="form-control" name="sign" value="" placeholder="请输入sign">
+			</div>	
+			<button type="submit" class="btn btn-default">提交</button>
+		</form>
+	</div>
+	
+		
+</body>
+
+<html>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+    <mapper namespace="com.ry.fu.esb.doctorbook.mapper.ShiftDutyStatisticsMapper">
+    <sql id="selectPatientStatisticsByDeptId">
+      C.ID,C.SHIFT_DOCTOR,C.SHIFT_DOCTOR_NAME,C.SUB_SHIFT_DOCTOR_ID,C.SUB_SHIFT_DOCTOR_NAME,C.SHIFT_TIME,C.ST_STATE,
+      C.TAKE_DEPT_ID,C.TAKE_DEPT_NAME,C.SUP_TAKE_DOCTOR_ID,C.SUP_TAKE_DOCTOR_NAME,C.TAKE_DOCTOR,C.TAKE_DOCTOR_NAME,
+      C.TAKE_TIME ,H.PATIENT_ID,H.NAME,H.BED_NO
+    </sql>
+
+    <sql id="selectDepartmentStatistics">
+    P.ORG_ID,P.ORG_NAME,D.SHIFT_DOCTOR,D.SHIFT_DOCTOR_NAME,D.TAKE_DOCTOR,
+    D.TAKE_DOCTOR_NAME,D.ST_STATE,D.SHIFT_TIME,D.TAKE_TIME
+    </sql>
+
+    <select id="selectPatientStatisticsByDeptId" resultMap="patientStatisticsVO">
+        SELECT
+        <include refid="selectPatientStatisticsByDeptId"/>
+        FROM PWP_ORG O
+        INNER JOIN M_CS_DATA C
+        ON C.SHIFT_DEPT_ID=ORG_ID
+        INNER JOIN M_HOSPITAL_PATIENT H
+        ON C.PATIENT_ID=H.PATIENT_ID
+        WHERE O.ORG_ENABLED = 1
+        AND O.ORG_DELETED = 0
+        AND O.ORG_PID =#{deptId}
+        AND CEIL(C.SHIFT_TIME-to_date(#{date},'yyyy/mm/dd'))='1'
+        ORDER BY H.BED_NO
+    </select>
+
+
+    <resultMap id="patientStatisticsVO" type="com.ry.fu.esb.doctorbook.model.PatientStatisticsVO">
+        <result property="shiftDoctorId" column="SHIFT_DOCTOR" jdbcType="NUMERIC"/>
+        <result property="shiftDoctorName" column="SHIFT_DOCTOR_NAME" jdbcType="VARCHAR"/>
+        <result property="subShiftDoctorId" column="SUB_SHIFT_DOCTOR_ID" jdbcType="NUMERIC"/>
+        <result property="subShiftDoctorName" column="SUB_SHIFT_DOCTOR_NAME" jdbcType="VARCHAR"/>
+        <result property="patientId" column="PATIENT_ID" jdbcType="NUMERIC"/>
+        <result property="patientName" column="NAME" jdbcType="VARCHAR"/>
+        <result property="sickBedNo" column="BED_NO" jdbcType="VARCHAR"/>
+        <result property="shiftTime" column="SHIFT_TIME" />
+        <result property="status" column="ST_STATE" jdbcType="NUMERIC"/>
+        <result property="succeedDeptId" column="TAKE_DEPT_ID" jdbcType="NUMERIC"/>
+        <result property="succeedDeptName" column="TAKE_DEPT_NAME" jdbcType="VARCHAR"/>
+        <result property="succeedDoctorId" column="TAKE_DOCTOR" jdbcType="NUMERIC"/>
+        <result property="succeedDoctorName" column="TAKE_DOCTOR_NAME" jdbcType="VARCHAR"/>
+        <result property="supTakeDoctorId" column="SUP_TAKE_DOCTOR_ID" jdbcType="NUMERIC"/>
+        <result property="supTakeDoctorName" column="SUP_TAKE_DOCTOR_NAME" jdbcType="VARCHAR"/>
+        <result property="succeedTime" column="TAKE_TIME" />
+
+    </resultMap>
+
+    <select id="selectDepartmentStatistics" resultMap="departmentShiftedStatisticsVO">
+        SELECT
+        <include refid="selectDepartmentStatistics"/>
+
+        from pwp_org p
+        left join pwp_org s
+        on p.ORG_ID= s.org_pid
+        inner join m_cs_data d
+        on d.shift_dept_Id=s.org_id
+        where d.SHIFT_FLAG=2
+        and CEIL(SHIFT_TIME-to_date(#{date},'yyyy/mm/dd'))='1'
+    </select>
+    <resultMap id="departmentShiftedStatisticsVO" type="com.ry.fu.esb.doctorbook.model.DepartmentShiftedStatisticsVO">
+        <result property="shiftDeptId" column="ORG_ID" jdbcType="NUMERIC"/>
+        <result property="shiftDeptName" column="ORG_NAME" jdbcType="VARCHAR"/>
+
+        <collection property="doctorsInfo"  javaType="list" ofType="com.ry.fu.esb.doctorbook.model.DoctorShiftDuty">
+            <result property="shiftDoctorId" column="SHIFT_DOCTOR" jdbcType="NUMERIC"/>
+            <result property="shiftDoctorName" column="SHIFT_DOCTOR_NAME" jdbcType="VARCHAR"/>
+            <result property="shiftTime" column="SHIFT_TIME" />
+            <result property="status" column="ST_STATE" jdbcType="NUMERIC"/>
+            <result property="succeedDoctorId" column="TAKE_DOCTOR" jdbcType="NUMERIC"/>
+            <result property="succeedDoctorName" column="TAKE_DOCTOR_NAME" jdbcType="VARCHAR"/>
+            <result property="succeedTime" column="TAKE_TIME" />
+            <result property="subShiftDoctorId" column="SUB_SHIFT_DOCTOR_ID" jdbcType="NUMERIC"/>
+            <result property="subShiftDoctorName" column="SUB_SHIFT_DOCTOR_NAME" jdbcType="VARCHAR"/>
+            <result property="supTakeDoctorId" column="SUP_TAKE_DOCTOR_ID" jdbcType="NUMERIC"/>
+            <result property="supTakeDoctorName" column="SUP_TAKE_DOCTOR_NAME" jdbcType="VARCHAR"/>
+
+        </collection>
+
+
+    </resultMap>
+</mapper>

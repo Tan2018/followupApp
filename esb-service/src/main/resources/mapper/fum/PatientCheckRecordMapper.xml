@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ry.fu.esb.doctorbook.mapper.PatientCheckRecordMapper">
+    <resultMap type="com.ry.fu.esb.doctorbook.model.PatientCheckRecord" id="CSDataMap">
+        <id column="id" property="id" />
+        <result column="doctor_id" property="doctorId" />
+        <result column="dept_id" property="deptId" />
+        <result column="group_id" property="groupId" />
+        <result column="st_visible" property="shiftVisible" />
+        <result column="doctor_name" property="doctorName" />
+        <result column="type" property="type" />
+        <result column="create_time" property="createTime" />
+        <result column="st_word" property="shiftWord" />
+        <collection property="patientRecordFiles" column="id" select="com.ry.fu.esb.doctorbook.mapper.PatientRecordFileMapper.findFileByRecordId">
+        </collection>
+        <collection property="appointDoctors" column="id" select="com.ry.fu.esb.doctorbook.mapper.AppointDoctorMapper.findDoctorIdByRecordId">
+        </collection>
+    </resultMap>
+
+
+
+   <!-- <select id="findByCheckRecordPatientId" parameterType="map"  resultMap="CSDataMap">
+        SELECT * FROM
+        (select c.*,ROWNUM RN from (
+        select j.* from (
+        SELECT a.* FROM
+        (select * from ((select b.id,b.doctor_id,b.doctor_name,b.create_time,b.st_word from m_pt_record b where b.type = #{type} and b.patient_id = #{patientId} and #{doctorId} in
+        (select t2.doctor_id from m_pt_record t1,m_ap_doctor t2 where t1.id = t2.pc_id and t1.type = #{type} and t1.patient_id = #{patientId})) union
+        (select t3.id,t3.doctor_id,t3.doctor_name,t3.create_time,t3.st_word from m_pt_record t3 where t3.patient_id = #{patientId} and t3.type = #{type} and t3.st_visible = 1 and t3.dept_id = #{deptId}) union
+        (select t4.id,t4.doctor_id,t4.doctor_name,t4.create_time,t4.st_word from m_pt_record t4 where t4.patient_id = #{patientId} and t4.type = #{type} and t4.st_visible = 2 and t4.group_id = #{groupId})) t) a
+        union
+        select  r.id,r.DOCTOR_ID,r.DOCTOR_NAME,m.shift_time CREATE_TIME,r.ST_WORD from M_OTHER_DEP m inner join m_pt_record r on m.patient_id = r.id
+        where r.patient_id = #{patientId} and r.type = #{type}) j order by j.create_time desc ) c
+        WHERE ROWNUM &lt;= #{end})
+        WHERE RN &gt;= #{start}
+    </select>-->
+</mapper>

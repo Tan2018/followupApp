@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- XML转换器 -->
+    <bean id="xmlTransformer" class="com.ry.fu.esb.common.transformer.XmlTransformerFactoryBean">
+        <property name="jaxb2Marshaller">
+            <bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller"
+                  parent="jaxb2MarshallerTemplate">
+                <property name="packagesToScan">
+                    <array>
+                        <value>com.ry.fu.esb.common.request</value>
+                        <value>com.ry.fu.esb.common.response</value>
+                        <value>com.ry.fu.esb.doctorbook.model.response</value>
+                        <value>com.ry.fu.esb.doctorbook.model.request</value>
+                        <value>com.ry.fu.esb.medicaljournal.model.request</value>
+                        <value>com.ry.fu.esb.medicaljournal.model.response</value>
+                        <value>com.ry.fu.esb.medicalpatron.model.request</value>
+                        <value>com.ry.fu.esb.medicalpatron.model.response</value>
+                        <value>com.ry.fu.esb.jpush.model.request</value>
+                        <value>com.ry.fu.esb.jpush.model.response</value>
+                        <value>com.ry.fu.esb.instantmessaging.model.request</value>
+                        <value>com.ry.fu.esb.instantmessaging.model.response</value>
+                    </array>
+                </property>
+            </bean>
+        </property>
+    </bean>
+    <bean id="jaxb2MarshallerTemplate" class="org.springframework.oxm.jaxb.Jaxb2Marshaller" abstract="true">
+        <property name="validationEventHandler">
+            <bean class="com.ry.fu.esb.common.transformer.UnmarshalExceptionEventHandler"/>
+        </property>
+    </bean>
+</beans>
